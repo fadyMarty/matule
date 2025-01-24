@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:endColor="#0076B1"
+                android:startColor="#48B2E7" />
+        </shape>
+    </item>
+
+    <item
+        android:drawable="@drawable/splash_logo"
+        android:gravity="center" />
+</layer-list>
