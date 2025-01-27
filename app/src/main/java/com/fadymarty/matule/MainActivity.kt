@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.fadymarty.matule.common.ui.theme.MatuleTheme
-import com.fadymarty.matule.presentation.navigation.graph.MainGraph
+import com.fadymarty.matule.presentation.navigation.graph.RootNavigationGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MatuleTheme {
-                MainGraph()
+                RootNavigationGraph()
             }
         }
     }

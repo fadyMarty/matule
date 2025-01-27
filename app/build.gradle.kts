@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     id("kotlin-kapt")
+    kotlin("plugin.serialization") version "2.0.0"
     id("com.google.dagger.hilt.android")
 }
 
@@ -64,8 +65,6 @@ dependencies {
     val dagger_hilt_version = "2.54"
     implementation("com.google.dagger:hilt-android:$dagger_hilt_version")
     kapt("com.google.dagger:hilt-android-compiler:$dagger_hilt_version")
-
-    // Navigation
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Lifecycles

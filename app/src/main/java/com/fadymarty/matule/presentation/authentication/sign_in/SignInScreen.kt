@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +35,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,17 +52,17 @@ import com.fadymarty.matule.presentation.components.MatuleButton
 import com.fadymarty.matule.presentation.components.MatuleDialog
 import com.fadymarty.matule.presentation.components.TextEntryModule
 import com.fadymarty.matule.presentation.navigation.graph.Graph
-import com.fadymarty.matule.presentation.navigation.graph.MainGraph
 import com.fadymarty.matule.presentation.navigation.screen.Screen
 
 @Composable
 fun SignInScreen(
     navController: NavHostController,
-    viewModel: SignInViewModel = hiltViewModel()
+    viewModel: SignInViewModel = hiltViewModel(),
 ) {
     val state = viewModel.state.collectAsState().value
     val isDialogShown = viewModel.isDialogShown.collectAsState().value
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(context) {
         viewModel.validationEvents.collect { event ->
@@ -147,7 +149,12 @@ fun SignInScreen(
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Go
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
                 )
             )
 
@@ -188,6 +195,11 @@ fun SignInScreen(
                 isPasswordShown = state.isPasswordShown,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        viewModel.onEvent(SignInEvent.SignIn)
+                    }
                 )
             )
 
@@ -211,9 +223,7 @@ fun SignInScreen(
             MatuleButton(
                 text = "Войти",
                 onClick = {
-                    viewModel.onEvent(
-                        SignInEvent.SignIn
-                    )
+                    viewModel.onEvent(SignInEvent.SignIn)
                 }
             )
 

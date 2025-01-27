@@ -1,5 +1,6 @@
-package com.fadymarty.matule.data.network.dto
+package com.fadymarty.matule.data.remote.dto
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable

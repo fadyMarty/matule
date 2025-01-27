@@ -1,6 +1,5 @@
 package com.fadymarty.matule.presentation.authentication.sign_up
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,30 +16,30 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,11 +57,7 @@ import com.fadymarty.matule.presentation.components.MatuleButton
 import com.fadymarty.matule.presentation.components.MatuleDialog
 import com.fadymarty.matule.presentation.components.TextEntryModule
 import com.fadymarty.matule.presentation.navigation.graph.Graph
-import com.fadymarty.matule.presentation.navigation.graph.MainGraph
 import com.fadymarty.matule.presentation.navigation.screen.Screen
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpScreen(
@@ -72,6 +67,7 @@ fun SignUpScreen(
     val state = viewModel.state.collectAsState().value
     val isDialogShown = viewModel.isDialogShown.collectAsState().value
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(key1 = context) {
         viewModel.validationEvents.collect { event ->
@@ -157,7 +153,10 @@ fun SignUpScreen(
                         fontFamily = PoppinsFontFamily,
                         fontWeight = FontWeight.Medium,
                     )
-                }
+                },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,7 +177,8 @@ fun SignUpScreen(
                     )
                 },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
                 )
             )
 
@@ -218,7 +218,13 @@ fun SignUpScreen(
                 },
                 isPasswordShown = state.isPasswordShown,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        viewModel.onEvent(SignUpEvent.SignUp)
+                    }
                 )
             )
 

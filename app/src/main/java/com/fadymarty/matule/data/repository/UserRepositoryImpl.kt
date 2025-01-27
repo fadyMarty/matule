@@ -1,20 +1,21 @@
 package com.fadymarty.matule.data.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.fadymarty.matule.common.util.Constants
 import com.fadymarty.matule.common.util.Constants.USER_SETTINGS
+import com.fadymarty.matule.data.remote.dto.UserDto
 import com.fadymarty.matule.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 private val Context.dataStore by preferencesDataStore(USER_SETTINGS)
@@ -39,6 +40,13 @@ class UserRepositoryImpl @Inject constructor(
                 this.email = email
                 this.password = password
             }
+            val userDto = UserDto(
+                id = UUID.randomUUID().toString(),
+                name = name,
+                email = email
+            )
+            supabaseClient.from("users")
+                .upsert(userDto)
             saveToken()
             true
         } catch (e: Exception) {
@@ -73,7 +81,7 @@ class UserRepositoryImpl @Inject constructor(
                 true
             }
         } catch (e: Exception) {
-            Log.e("UserRepository", e.message.toString())
+            e.printStackTrace()
             false
         }
     }
