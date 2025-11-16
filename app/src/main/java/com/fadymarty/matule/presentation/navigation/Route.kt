@@ -35,6 +35,9 @@ sealed interface Route {
     data object CatalogScreen : Route
 
     @Serializable
+    data object ProjectsNavigation : Route
+
+    @Serializable
     data object ProjectsScreen : Route
 
     @Serializable

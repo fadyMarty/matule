@@ -12,6 +12,7 @@ import com.fadymarty.matule.presentation.login.LoginViewModel
 import com.fadymarty.matule.presentation.pin.create_pin.CreatePinViewModel
 import com.fadymarty.matule.presentation.pin.enter_pin.EnterPinViewModel
 import com.fadymarty.matule.presentation.profile.ProfileViewModel
+import com.fadymarty.matule.presentation.projects.CreateProjectViewModel
 import com.fadymarty.matule.presentation.register.RegisterViewModel
 import com.fadymarty.matule.presentation.splash.SplashViewModel
 import org.koin.core.module.dsl.bind
@@ -37,4 +38,5 @@ val appModule = module {
     viewModelOf(::EnterPinViewModel)
     viewModelOf(::ProfileViewModel)
     viewModelOf(::HomeViewModel)
+    viewModelOf(::CreateProjectViewModel)
 }

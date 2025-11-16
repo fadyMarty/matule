@@ -13,9 +13,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import com.fadymarty.matule.presentation.home.HomeScreen
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule.presentation.profile.ProfileScreen
+import com.fadymarty.matule.presentation.projects.CreateProjectScreen
 import com.fadymarty.matule_ui_kit.presentation.components.icons.MatuleIcons
 import com.fadymarty.matule_ui_kit.presentation.components.tab_bar.TabBar
 import com.fadymarty.matule_ui_kit.presentation.components.tab_bar.TabBarItem
@@ -48,7 +50,7 @@ fun MainScreen(
                         label = "Проекты",
                         iconSize = 24.dp,
                         spacing = 3.dp,
-                        route = Route.ProjectsScreen
+                        route = Route.ProjectsNavigation
                     ),
                     TabBarItem(
                         icon = MatuleIcons.Profile,
@@ -84,8 +86,15 @@ fun MainScreen(
 
             }
 
-            composable<Route.ProjectsScreen> {
+            navigation<Route.ProjectsNavigation>(
+                startDestination = Route.ProjectsScreen
+            ) {
+                composable<Route.ProjectsScreen> {
 
+                }
+                composable<Route.CreateProjectScreen> {
+                    CreateProjectScreen()
+                }
             }
 
             composable<Route.ProfileScreen> {

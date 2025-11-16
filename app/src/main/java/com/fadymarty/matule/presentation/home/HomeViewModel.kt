@@ -3,8 +3,8 @@ package com.fadymarty.matule.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fadymarty.network.domain.model.Product
-import com.fadymarty.network.domain.use_case.shop.AddProductToCartUseCase
-import com.fadymarty.network.domain.use_case.shop.GetBucketUseUse
+import com.fadymarty.network.domain.use_case.bucket.AddProductToCartUseCase
+import com.fadymarty.network.domain.use_case.bucket.GetBucketUseUse
 import com.fadymarty.network.domain.use_case.shop.GetNewsUseCase
 import com.fadymarty.network.domain.use_case.shop.SearchProductsUseCase
 import kotlinx.coroutines.Job
