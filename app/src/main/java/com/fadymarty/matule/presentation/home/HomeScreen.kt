@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -28,13 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.fadymarty.matule.presentation.components.LoadingContent
 import com.fadymarty.matule.presentation.components.ProductModal
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
@@ -168,6 +167,11 @@ private fun HomeContent(
                                         )
                                     )
                             ) {
+                                AsyncImage(
+                                    modifier = Modifier.fillMaxSize(),
+                                    model = news.newsImage,
+                                    contentDescription = null
+                                )
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -226,30 +230,18 @@ private fun HomeContent(
                 item {
                     Spacer(Modifier.height(25.dp))
                 }
-                if (!state.isCatalogLoading) {
-                    itemsIndexed(state.products) { index, product ->
-                        PrimaryCard(
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                            title = product.title,
-                            type = product.type,
-                            price = product.price,
-                            added = state.bucket.any { it?.productId == product.id },
-                            onClick = {
-                                onEvent(HomeEvent.SelectProduct(product))
-                            }
-                        )
-                        Spacer(Modifier.height(16.dp))
-                    }
-                }
-                if (state.isCatalogLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+                itemsIndexed(state.products) { index, product ->
+                    PrimaryCard(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        title = product.title,
+                        type = product.type,
+                        price = product.price,
+                        added = state.bucket.any { it?.productId == product.id },
+                        onClick = {
+                            onEvent(HomeEvent.SelectProduct(product))
                         }
-                    }
+                    )
+                    Spacer(Modifier.height(16.dp))
                 }
             }
         }
@@ -261,8 +253,7 @@ private fun HomeContent(
                 product = product,
                 onClick = {
                     onEvent(HomeEvent.AddProductToBucket(product))
-                },
-                isLoading = state.isAddProductToCartLoading
+                }
             )
         }
     }

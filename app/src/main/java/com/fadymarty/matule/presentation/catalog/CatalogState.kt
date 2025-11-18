@@ -1,12 +1,10 @@
-package com.fadymarty.matule.presentation.home
+package com.fadymarty.matule.presentation.catalog
 
 import com.fadymarty.network.domain.model.Cart
-import com.fadymarty.network.domain.model.News
 import com.fadymarty.network.domain.model.Product
 
-data class HomeState(
+data class CatalogState(
     val isLoading: Boolean = true,
-    val news: List<News> = emptyList(),
     val products: List<Product> = emptyList(),
     val bucket: List<Cart?> = emptyList(),
     val types: List<String> = emptyList(),

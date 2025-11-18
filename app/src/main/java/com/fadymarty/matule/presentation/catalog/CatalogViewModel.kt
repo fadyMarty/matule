@@ -1,4 +1,4 @@
-package com.fadymarty.matule.presentation.home
+package com.fadymarty.matule.presentation.catalog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,7 +6,6 @@ import com.fadymarty.network.domain.model.Product
 import com.fadymarty.network.domain.use_case.bucket.AddProductToBucketUseCase
 import com.fadymarty.network.domain.use_case.bucket.DeleteCartUseCase
 import com.fadymarty.network.domain.use_case.bucket.GetBucketUseUse
-import com.fadymarty.network.domain.use_case.shop.GetNewsUseCase
 import com.fadymarty.network.domain.use_case.shop.SearchProductsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -18,18 +17,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class HomeViewModel(
-    private val getNewsUseCase: GetNewsUseCase,
+class CatalogViewModel(
     private val searchProductsUseCase: SearchProductsUseCase,
     private val getBucketUseUse: GetBucketUseUse,
     private val addProductToBucketUseCase: AddProductToBucketUseCase,
     private val deleteCartUseCase: DeleteCartUseCase,
 ) : ViewModel() {
-
-    private val _state = MutableStateFlow(HomeState())
+    private val _state = MutableStateFlow(CatalogState())
     val state = _state.asStateFlow()
 
-    private val _event: Channel<HomeEvent> = Channel()
+    private val _event: Channel<CatalogEvent> = Channel()
     val event = _event.receiveAsFlow()
 
     private var searchJob: Job? = null
@@ -42,7 +39,6 @@ class HomeViewModel(
         _state.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
-            val news = async { getNewsUseCase() }
             val products = async {
                 searchProductsUseCase(
                     query = _state.value.searchQuery,
@@ -51,19 +47,13 @@ class HomeViewModel(
             }
             val bucket = async { getBucketUseUse() }
 
-            val newsResult = news.await()
             val productsResult = products.await()
             val bucketResult = bucket.await()
 
             val results = listOf(
-                newsResult,
                 productsResult,
                 bucketResult
             )
-
-            newsResult.onSuccess { news ->
-                _state.update { it.copy(news = news) }
-            }
 
             productsResult.onSuccess { products ->
                 _state.update {
@@ -81,28 +71,28 @@ class HomeViewModel(
             if (results.all { it.isSuccess }) {
                 _state.update { it.copy(isLoading = false) }
             } else {
-                _event.send(HomeEvent.ShowSnackBar)
+                _event.send(CatalogEvent.ShowSnackBar)
             }
         }
     }
 
-    fun onEvent(event: HomeEvent) {
+    fun onEvent(event: CatalogEvent) {
         when (event) {
-            is HomeEvent.SearchQueryChanged -> {
+            is CatalogEvent.SearchQueryChanged -> {
                 _state.update { it.copy(searchQuery = event.value) }
                 searchProducts()
             }
 
-            is HomeEvent.SelectProduct -> {
-                selectProduct(event.product)
+            is CatalogEvent.SelectProduct -> {
+                selectProduct(product = event.product)
             }
 
-            is HomeEvent.SelectType -> {
+            is CatalogEvent.SelectType -> {
                 _state.update { it.copy(selectedType = event.type) }
                 searchProducts()
             }
 
-            is HomeEvent.AddProductToBucket -> {
+            is CatalogEvent.AddProductToBucket -> {
                 addProductToCart(event.product)
             }
 
@@ -127,7 +117,7 @@ class HomeViewModel(
                     }
                     .onFailure {
                         _state.update { it.copy(isLoading = false) }
-                        _event.send(HomeEvent.ShowSnackBar)
+                        _event.send(CatalogEvent.ShowSnackBar)
                     }
             }
         } else {
@@ -164,31 +154,27 @@ class HomeViewModel(
                     }
                 }
                 .onFailure {
-                    _event.send(HomeEvent.ShowSnackBar)
+                    _event.send(CatalogEvent.ShowSnackBar)
                 }
         }
     }
 
     private fun addProductToCart(product: Product) {
-        _state.update {
-            it.copy(
-                isLoading = true,
-                selectedProduct = null
-            )
-        }
+        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             addProductToBucketUseCase(product)
                 .onSuccess { cart ->
                     _state.update {
                         it.copy(
                             isLoading = false,
+                            selectedProduct = null,
                             bucket = it.bucket + cart
                         )
                     }
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(HomeEvent.ShowSnackBar)
+                    _event.send(CatalogEvent.ShowSnackBar)
                 }
         }
     }

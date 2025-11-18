@@ -7,6 +7,8 @@ import com.fadymarty.matule.domain.use_case.settings.SetNotificationsEnabledUseC
 import com.fadymarty.matule.domain.use_case.validation.ValidateEmailUseCase
 import com.fadymarty.matule.domain.use_case.validation.ValidatePasswordConfirmUseCase
 import com.fadymarty.matule.domain.use_case.validation.ValidatePasswordUseCase
+import com.fadymarty.matule.presentation.cart.CartViewModel
+import com.fadymarty.matule.presentation.catalog.CatalogViewModel
 import com.fadymarty.matule.presentation.home.HomeViewModel
 import com.fadymarty.matule.presentation.login.LoginViewModel
 import com.fadymarty.matule.presentation.pin.create_pin.CreatePinViewModel
@@ -38,5 +40,7 @@ val appModule = module {
     viewModelOf(::EnterPinViewModel)
     viewModelOf(::ProfileViewModel)
     viewModelOf(::HomeViewModel)
+    viewModelOf(::CatalogViewModel)
     viewModelOf(::CreateProjectViewModel)
+    viewModelOf(::CartViewModel)
 }

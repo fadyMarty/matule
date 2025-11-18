@@ -26,31 +26,37 @@ fun NavGraph() {
                 navController = navController
             )
         }
+
         composable<Route.LoginScreen> {
             LoginScreen(
                 navController = navController
             )
         }
+
         composable<Route.RegisterScreen> {
             RegisterScreen(
                 navController = navController
             )
         }
+
         composable<Route.CreatePasswordScreen> {
             CreatePasswordScreen(
                 navController = navController
             )
         }
+
         composable<Route.CreatePinScreen> {
             CreatePinScreen(
                 navController = navController
             )
         }
+
         composable<Route.EnterPinScreen> {
             EnterPinScreen(
                 navController = navController
             )
         }
+
         navigation<Route.MainNavigation>(
             startDestination = Route.MainScreen
         ) {
@@ -59,6 +65,10 @@ fun NavGraph() {
                     rootNavController = navController
                 )
             }
+        }
+
+        composable<Route.CartScreen> {
+
         }
     }
 }

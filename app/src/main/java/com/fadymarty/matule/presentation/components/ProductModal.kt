@@ -17,7 +17,6 @@ fun ProductModal(
     onDismissRequest: () -> Unit,
     product: Product,
     onClick: () -> Unit,
-    isLoading: Boolean = false,
 ) {
     Modal(
         modifier = modifier,
@@ -48,8 +47,7 @@ fun ProductModal(
         Spacer(Modifier.height(19.dp))
         BigButton(
             label = "Добавить за ${product.price} ₽",
-            onClick = onClick,
-            isLoading = isLoading
+            onClick = onClick
         )
         Spacer(Modifier.height(40.dp))
     }
