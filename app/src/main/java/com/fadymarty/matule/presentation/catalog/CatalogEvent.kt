@@ -7,5 +7,5 @@ sealed class CatalogEvent {
     data class SelectType(val type: String?) : CatalogEvent()
     data class SelectProduct(val product: Product?) : CatalogEvent()
     data class AddProductToBucket(val product: Product) : CatalogEvent()
-    object ShowSnackBar : CatalogEvent()
+    object ShowErrorSnackBar : CatalogEvent()
 }

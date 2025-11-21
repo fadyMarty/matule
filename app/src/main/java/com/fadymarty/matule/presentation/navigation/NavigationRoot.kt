@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.fadymarty.matule.presentation.cart.CartScreen
 import com.fadymarty.matule.presentation.login.LoginScreen
 import com.fadymarty.matule.presentation.main.MainScreen
 import com.fadymarty.matule.presentation.pin.create_pin.CreatePinScreen
@@ -68,7 +69,9 @@ fun NavGraph() {
         }
 
         composable<Route.CartScreen> {
-
+            CartScreen(
+                rootNavController = navController
+            )
         }
     }
 }

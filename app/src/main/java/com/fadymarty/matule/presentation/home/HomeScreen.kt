@@ -31,9 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingContent
 import com.fadymarty.matule.presentation.components.ProductModal
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
@@ -50,15 +52,16 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
             when (event) {
-                is HomeEvent.ShowSnackBar -> {
+                is HomeEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackBarHostState.showSnackbar(
-                            message = "",
+                            message = context.getString(R.string.error_message),
                             duration = SnackbarDuration.Indefinite
                         )
                     }
@@ -115,7 +118,8 @@ private fun HomeContent(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
                         onClose = {
                             snackBarHostState.currentSnackbarData?.dismiss()
-                        }
+                        },
+                        message = it.visuals.message
                     )
                 }
             )
@@ -136,7 +140,6 @@ private fun HomeContent(
                 )
             ) {
                 item {
-                    Spacer(Modifier.height(24.dp))
                     Text(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         text = "Акции и новости",

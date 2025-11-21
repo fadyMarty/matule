@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -28,9 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingContent
@@ -51,16 +52,17 @@ fun CatalogScreen(
     navController: NavHostController,
     viewModel: CatalogViewModel = koinViewModel(),
 ) {
+    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
             when (event) {
-                is CatalogEvent.ShowSnackBar -> {
+                is CatalogEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackBarHostState.showSnackbar(
-                            message = "",
+                            message = context.getString(R.string.error_message),
                             duration = SnackbarDuration.Indefinite
                         )
                     }
@@ -120,7 +122,13 @@ private fun CatalogContent(
                             interactionSource = null,
                             indication = null
                         ) {
-                            navController.navigate(Route.ProfileScreen)
+                            navController.navigate(Route.ProfileScreen) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         },
                     painter = painterResource(R.drawable.ic_user),
                     contentDescription = null
@@ -133,6 +141,7 @@ private fun CatalogContent(
                 snackbar = {
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
+                        message = it.visuals.message,
                         onClose = {
                             snackBarHostState.currentSnackbarData?.dismiss()
                         }
@@ -190,7 +199,7 @@ private fun CatalogContent(
                         bottom = if (state.bucket.isNotEmpty()) 120.dp else 0.dp
                     )
                 ) {
-                    itemsIndexed(state.products) { index, product ->
+                    items(state.products) { product ->
                         PrimaryCard(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             title = product.title,

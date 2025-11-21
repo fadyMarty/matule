@@ -9,9 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,17 +51,6 @@ private fun RegisterContent(
     state: RegisterState,
     onEvent: (RegisterEvent) -> Unit,
 ) {
-    val isButtonActive by remember(state) {
-        derivedStateOf {
-            state.firstName.isNotBlank() &&
-                    state.secondName.isNotBlank() &&
-                    state.lastName.isNotBlank() &&
-                    state.dateBirthday.isNotBlank() &&
-                    state.gender != null &&
-                    state.email.isNotBlank()
-        }
-    }
-
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -151,7 +138,12 @@ private fun RegisterContent(
                 onClick = {
                     onEvent(RegisterEvent.Submit)
                 },
-                active = isButtonActive
+                active = state.firstName.isNotBlank() &&
+                        state.secondName.isNotBlank() &&
+                        state.lastName.isNotBlank() &&
+                        state.dateBirthday.isNotBlank() &&
+                        state.gender != null &&
+                        state.email.isNotBlank()
             )
         }
     }

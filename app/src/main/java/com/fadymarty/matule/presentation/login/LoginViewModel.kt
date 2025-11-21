@@ -54,7 +54,7 @@ class LoginViewModel(
         if (!isEmailValid || !isPasswordValid) {
             return
         }
-        
+
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             loginUseCase(
@@ -66,7 +66,7 @@ class LoginViewModel(
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(LoginEvent.ShowSnackBar)
+                    _event.send(LoginEvent.ShowErrorSnackBar)
                 }
         }
     }

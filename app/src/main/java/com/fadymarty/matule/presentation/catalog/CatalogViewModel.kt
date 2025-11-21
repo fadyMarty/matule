@@ -71,7 +71,7 @@ class CatalogViewModel(
             if (results.all { it.isSuccess }) {
                 _state.update { it.copy(isLoading = false) }
             } else {
-                _event.send(CatalogEvent.ShowSnackBar)
+                _event.send(CatalogEvent.ShowErrorSnackBar)
             }
         }
     }
@@ -117,7 +117,7 @@ class CatalogViewModel(
                     }
                     .onFailure {
                         _state.update { it.copy(isLoading = false) }
-                        _event.send(CatalogEvent.ShowSnackBar)
+                        _event.send(CatalogEvent.ShowErrorSnackBar)
                     }
             }
         } else {
@@ -154,7 +154,7 @@ class CatalogViewModel(
                     }
                 }
                 .onFailure {
-                    _event.send(CatalogEvent.ShowSnackBar)
+                    _event.send(CatalogEvent.ShowErrorSnackBar)
                 }
         }
     }
@@ -174,7 +174,7 @@ class CatalogViewModel(
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(CatalogEvent.ShowSnackBar)
+                    _event.send(CatalogEvent.ShowErrorSnackBar)
                 }
         }
     }

@@ -15,16 +15,17 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingContent
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
@@ -43,6 +44,7 @@ fun LoginScreen(
     navController: NavHostController,
     viewModel: LoginViewModel = koinViewModel(),
 ) {
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -57,9 +59,11 @@ fun LoginScreen(
                     }
                 }
 
-                is LoginEvent.ShowSnackBar -> {
+                is LoginEvent.ShowErrorSnackBar -> {
                     val job = launch {
-                        snackbarHostState.showSnackbar("")
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.error_message)
+                        )
                     }
                     delay(5000)
                     job.cancel()
@@ -85,12 +89,6 @@ private fun AuthContent(
     state: LoginState,
     onEvent: (LoginEvent) -> Unit,
 ) {
-    val isButtonActive by remember(state) {
-        derivedStateOf {
-            state.email.isNotBlank() && state.password.isNotBlank()
-        }
-    }
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
@@ -103,7 +101,8 @@ private fun AuthContent(
                         .padding(start = 20.dp, end = 8.dp),
                     onClose = {
                         snackbarHostState.currentSnackbarData?.dismiss()
-                    }
+                    },
+                    message = it.visuals.message
                 )
             }
         }
@@ -170,7 +169,7 @@ private fun AuthContent(
                     onClick = {
                         onEvent(LoginEvent.Login)
                     },
-                    active = isButtonActive
+                    active = state.email.isNotBlank() && state.password.isNotBlank()
                 )
                 Spacer(Modifier.height(15.dp))
                 Text(

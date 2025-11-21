@@ -22,9 +22,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Matule"
 include(":app")
-
-include(":matule_ui_kit")
-project(":matule_ui_kit").projectDir = File("../MatuleUIKit/matule_ui_kit")
-
-include(":network")
-project(":network").projectDir = File("../MatuleNetwork/network")

@@ -81,7 +81,8 @@ class HomeViewModel(
             if (results.all { it.isSuccess }) {
                 _state.update { it.copy(isLoading = false) }
             } else {
-                _event.send(HomeEvent.ShowSnackBar)
+                _state.update { it.copy(isLoading = false) }
+                _event.send(HomeEvent.ShowErrorSnackBar)
             }
         }
     }
@@ -127,7 +128,7 @@ class HomeViewModel(
                     }
                     .onFailure {
                         _state.update { it.copy(isLoading = false) }
-                        _event.send(HomeEvent.ShowSnackBar)
+                        _event.send(HomeEvent.ShowErrorSnackBar)
                     }
             }
         } else {
@@ -164,7 +165,7 @@ class HomeViewModel(
                     }
                 }
                 .onFailure {
-                    _event.send(HomeEvent.ShowSnackBar)
+                    _event.send(HomeEvent.ShowErrorSnackBar)
                 }
         }
     }
@@ -188,7 +189,7 @@ class HomeViewModel(
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(HomeEvent.ShowSnackBar)
+                    _event.send(HomeEvent.ShowErrorSnackBar)
                 }
         }
     }

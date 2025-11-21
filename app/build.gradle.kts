@@ -65,7 +65,9 @@ dependencies {
     implementation(libs.pdf.viewer)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-
-    implementation(project(":matule_ui_kit"))
-    implementation(project(":network"))
+    implementation(libs.matule.ui.kit)
+    implementation(libs.matule.network)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingContent
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
@@ -41,6 +42,7 @@ fun ProfileScreen(
     rootNavController: NavHostController,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -49,7 +51,9 @@ fun ProfileScreen(
             when (event) {
                 is ProfileEvent.ShowSnackBar -> {
                     val job = launch {
-                        snackbarHostState.showSnackbar("")
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.error_message)
+                        )
                     }
                     delay(5000)
                     job.cancel()
@@ -94,7 +98,8 @@ private fun ProfileContent(
                         .padding(start = 20.dp, end = 8.dp),
                     onClose = {
                         snackbarHostState.currentSnackbarData?.dismiss()
-                    }
+                    },
+                    message = it.visuals.message
                 )
             }
         }

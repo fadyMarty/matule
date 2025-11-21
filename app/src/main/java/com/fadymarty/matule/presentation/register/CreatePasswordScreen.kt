@@ -19,10 +19,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingContent
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
@@ -36,6 +38,7 @@ fun CreatePasswordScreen(
     navController: NavHostController,
     viewModel: RegisterViewModel = koinActivityViewModel(),
 ) {
+    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -43,7 +46,9 @@ fun CreatePasswordScreen(
         viewModel.event.collect { event ->
             when (event) {
                 is RegisterEvent.ShowSnackBar -> {
-                    snackbarHostState.showSnackbar("")
+                    snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.error_message)
+                    )
                 }
 
                 is RegisterEvent.NavigateToCreatePin -> {
@@ -88,7 +93,8 @@ private fun CreatePasswordContent(
                         .padding(start = 20.dp, end = 12.dp),
                     onClose = {
                         snackbarHostState.currentSnackbarData?.dismiss()
-                    }
+                    },
+                    message = it.visuals.message
                 )
             }
         }

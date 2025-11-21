@@ -6,6 +6,9 @@ import com.fadymarty.network.domain.model.Cart
 import com.fadymarty.network.domain.use_case.bucket.DeleteCartUseCase
 import com.fadymarty.network.domain.use_case.bucket.GetBucketUseUse
 import com.fadymarty.network.domain.use_case.bucket.UpdateCartUseCase
+import com.fadymarty.network.domain.use_case.order.CreateOrderUseCase
+import com.fadymarty.network.domain.use_case.shop.GetCatalogUseCase
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +20,8 @@ class CartViewModel(
     private val getBucketUseUse: GetBucketUseUse,
     private val deleteCartUseCase: DeleteCartUseCase,
     private val updateCartUseCase: UpdateCartUseCase,
+    private val getCatalogUseCase: GetCatalogUseCase,
+    private val createOrderUseCase: CreateOrderUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CartState())
@@ -26,7 +31,7 @@ class CartViewModel(
     val event = _event.receiveAsFlow()
 
     init {
-        getBucket()
+        initialize()
     }
 
     fun onEvent(event: CartEvent) {
@@ -39,52 +44,83 @@ class CartViewModel(
                 onCountChanged(event.cart)
             }
 
+            is CartEvent.ClearBucket -> {
+                clearBucket()
+            }
+
+            is CartEvent.CreateOrder -> {
+                createOrder()
+            }
+
             else -> {}
+        }
+    }
+
+    private fun createOrder() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            createOrderUseCase(_state.value.bucket)
+                .onSuccess {
+                    _state.value.bucket.forEach { cart ->
+                        cart.id?.let { id ->
+                            deleteCartUseCase(id)
+                                .onFailure {
+                                    _event.send(CartEvent.ShowErrorSnackBar)
+                                }
+                        }
+                    }
+                    _state.update { it.copy(isLoading = false) }
+                    _event.send(CartEvent.ShowSuccessSnackBar)
+                }
+                .onFailure {
+                    _state.update { it.copy(isLoading = false) }
+                    _event.send(CartEvent.ShowErrorSnackBar)
+                }
+        }
+    }
+
+    private fun clearBucket() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            _state.value.bucket.forEach { cart ->
+                cart.id?.let { id ->
+                    deleteCartUseCase(id)
+                        .onSuccess {
+                            _state.update { it.copy(bucket = emptyList()) }
+                        }
+                        .onFailure {
+                            _event.send(CartEvent.ShowErrorSnackBar)
+                        }
+                }
+            }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
     private fun onCountChanged(cart: Cart) {
         viewModelScope.launch {
-            if (cart.id != null) {
-                _state.update { it.copy(isLoading = true) }
-                if (cart.count < 1) {
-                    deleteCartUseCase(cart.id!!)
-                        .onSuccess {
-                            _state.update {
-                                it.copy(
-                                    isLoading = false,
-                                    bucket = it.bucket - cart
-                                )
-                            }
+            cart.id?.let { id ->
+                _state.update {
+                    it.copy(
+                        bucket = it.bucket.map { item ->
+                            if (item.id == cart.id) cart else item
                         }
-                        .onFailure {
-                            _state.update { it.copy(isLoading = false) }
-                            _event.send(CartEvent.ShowSnackBar)
-                        }
-                } else {
-                    _state.update {
-                        it.copy(
-                            bucket = it.bucket.map { item ->
-                                if (item.id == cart.id) cart else item
-                            }
-                        )
-                    }
-
-                    updateCartUseCase(cart.id!!, cart)
-                        .onFailure {
-                            _state.update { it.copy(isLoading = false) }
-                            _event.send(CartEvent.ShowSnackBar)
-                        }
+                    )
                 }
+                updateCartUseCase(cart.id!!, cart)
+                    .onFailure {
+                        _state.update { it.copy(isLoading = false) }
+                        _event.send(CartEvent.ShowErrorSnackBar)
+                    }
             }
         }
     }
 
     private fun deleteCart(cart: Cart) {
-        if (cart.id != null) {
+        cart.id?.let { id ->
             viewModelScope.launch {
                 _state.update { it.copy(isLoading = true) }
-                deleteCartUseCase(cart.id!!)
+                deleteCartUseCase(id)
                     .onSuccess {
                         _state.update {
                             it.copy(
@@ -95,28 +131,37 @@ class CartViewModel(
                     }
                     .onFailure {
                         _state.update { it.copy(isLoading = false) }
-                        _event.send(CartEvent.ShowSnackBar)
+                        _event.send(CartEvent.ShowErrorSnackBar)
                     }
             }
         }
     }
 
-    private fun getBucket() {
+    private fun initialize() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            getBucketUseUse()
-                .onSuccess { bucket ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            bucket = bucket
-                        )
-                    }
-                }
-                .onFailure {
-                    _state.update { it.copy(isLoading = false) }
-                    _event.send(CartEvent.ShowSnackBar)
-                }
+
+            val bucket = async { getBucketUseUse() }
+            val catalog = async { getCatalogUseCase() }
+
+            val bucketResult = bucket.await()
+            val catalogResult = catalog.await()
+
+            val results = listOf(bucketResult, catalogResult)
+
+            bucketResult.onSuccess { bucket ->
+                _state.update { it.copy(bucket = bucket) }
+            }
+
+            catalogResult.onSuccess { catalog ->
+                _state.update { it.copy(catalog = catalog) }
+            }
+
+            if (results.any { it.isSuccess }) {
+                _state.update { it.copy(isLoading = false) }
+            } else {
+                _event.send(CartEvent.ShowErrorSnackBar)
+            }
         }
     }
 }
