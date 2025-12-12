@@ -67,7 +67,4 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.matule.ui.kit)
     implementation(libs.matule.network)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 }
