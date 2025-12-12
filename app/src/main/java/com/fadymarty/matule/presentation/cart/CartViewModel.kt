@@ -99,20 +99,18 @@ class CartViewModel(
 
     private fun onCountChanged(cart: Cart) {
         viewModelScope.launch {
-            cart.id?.let { id ->
-                _state.update {
-                    it.copy(
-                        bucket = it.bucket.map { item ->
-                            if (item.id == cart.id) cart else item
-                        }
-                    )
-                }
-                updateCartUseCase(cart.id!!, cart)
-                    .onFailure {
-                        _state.update { it.copy(isLoading = false) }
-                        _event.send(CartEvent.ShowErrorSnackBar)
+            _state.update {
+                it.copy(
+                    bucket = it.bucket.map { item ->
+                        if (item.id == cart.id) cart else item
                     }
+                )
             }
+            updateCartUseCase(cart)
+                .onFailure {
+                    _state.update { it.copy(isLoading = false) }
+                    _event.send(CartEvent.ShowErrorSnackBar)
+                }
         }
     }
 

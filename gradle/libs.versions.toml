@@ -1,13 +1,13 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.12.0"
-composeBom = "2025.11.01"
+activityCompose = "1.12.1"
+composeBom = "2025.12.00"
 
 koin = "4.1.1"
 kotlinxSerializationJson = "1.9.0"
@@ -15,7 +15,7 @@ navigationCompose = "2.9.6"
 datastorePreferences = "1.2.0"
 pdfViewer = "2.3.7"
 coil = "3.3.0"
-matuleNetwork = "1.0.1"
+matuleNetwork = "2.0.0"
 matuleUiKit = "2.0.0"
 
 [libraries]
@@ -41,8 +41,8 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 pdf-viewer = { module = "io.github.afreakyelf:Pdf-Viewer", version.ref = "pdfViewer" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-matule-network = { module = "com.gitea.fadyMarty:Matule-Network", version.ref = "matuleNetwork" }
-matule-ui-kit = { module = "com.gitea.fadyMarty:Matule-UI-Kit", version.ref = "matuleUiKit" }
+matule-network = { module = "com.github.fadyMarty:matule-network", version.ref = "matuleNetwork" }
+matule-ui-kit = { module = "com.github.fadyMarty:matule-ui-kit", version.ref = "matuleUiKit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
