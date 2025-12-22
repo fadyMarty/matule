@@ -18,34 +18,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fadymarty.matule.R
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
 import com.fadymarty.matule_ui_kit.presentation.components.header.SmallHeader
-import com.fadymarty.matule_ui_kit.presentation.components.icons.MatuleIcons
 import com.fadymarty.matule_ui_kit.presentation.components.input.Input
 import com.fadymarty.matule_ui_kit.presentation.components.select.Select
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CreateProjectScreen(
+fun CreateProjectRoot(
     viewsModel: CreateProjectViewModel = koinViewModel(),
 ) {
     val state by viewsModel.state.collectAsStateWithLifecycle()
 
-    CreateProjectContent(
+    CreateProjectScreen(
         state = state
     )
 }
 
 @Composable
-private fun CreateProjectContent(
+private fun CreateProjectScreen(
     state: CreateProjectState,
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             SmallHeader(
                 modifier = Modifier
@@ -139,7 +139,7 @@ private fun CreateProjectContent(
                 ) {
                     Icon(
                         modifier = Modifier.size(80.dp),
-                        imageVector = MatuleIcons.SelectImage,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_select),
                         contentDescription = null,
                         tint = MatuleTheme.colorScheme.description
                     )
@@ -152,15 +152,5 @@ private fun CreateProjectContent(
                 )
             }
         }
-    }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-private fun CreateProjectContentPreview() {
-    MatuleTheme {
-        CreateProjectContent(
-            state = CreateProjectState()
-        )
     }
 }

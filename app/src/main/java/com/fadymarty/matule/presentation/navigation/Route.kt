@@ -5,47 +5,47 @@ import kotlinx.serialization.Serializable
 sealed interface Route {
 
     @Serializable
-    data object SplashScreen : Route
+    data object Splash : Route
 
     @Serializable
-    data object LoginScreen : Route
+    data object Login : Route
 
     @Serializable
-    data object RegisterScreen : Route
+    data object Register : Route
 
     @Serializable
-    data object CreatePasswordScreen : Route
+    data object CreatePassword : Route
 
     @Serializable
-    data object CreatePinScreen : Route
+    data object CreatePin : Route
 
     @Serializable
-    data object EnterPinScreen : Route
+    data object EnterPin : Route
 
     @Serializable
-    data object MainNavigation : Route
+    data object MainGraph : Route
 
     @Serializable
-    data object MainScreen : Route
+    data object Main : Route
 
     @Serializable
-    data object HomeScreen : Route
+    data object Home : Route
 
     @Serializable
-    data object CatalogScreen : Route
+    data object Catalog : Route
 
     @Serializable
-    data object CartScreen : Route
+    data object Cart : Route
 
     @Serializable
-    data object ProjectsNavigation : Route
+    data object ProjectsGraph : Route
 
     @Serializable
-    data object ProjectsScreen : Route
+    data object Projects : Route
 
     @Serializable
-    data object CreateProjectScreen : Route
+    data object CreateProject : Route
 
     @Serializable
-    data object ProfileScreen : Route
+    data object Profile : Route
 }

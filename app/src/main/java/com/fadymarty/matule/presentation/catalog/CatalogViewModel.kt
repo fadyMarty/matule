@@ -96,7 +96,7 @@ class CatalogViewModel(
                 addProductToCart(event.product)
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

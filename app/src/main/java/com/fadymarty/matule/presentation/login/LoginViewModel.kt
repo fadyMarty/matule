@@ -38,7 +38,7 @@ class LoginViewModel(
                 login()
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

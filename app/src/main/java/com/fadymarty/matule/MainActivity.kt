@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.fadymarty.matule.presentation.navigation.NavGraph
+import com.fadymarty.matule.presentation.navigation.NavigationRoot
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MatuleTheme {
-                NavGraph()
+                NavigationRoot()
             }
         }
     }

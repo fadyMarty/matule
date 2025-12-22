@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
-import com.fadymarty.matule.presentation.components.LoadingContent
+import com.fadymarty.matule.presentation.components.LoadingScreen
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.controls.Toggle
@@ -38,15 +38,15 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun ProfileScreen(
+fun ProfileRoot(
     rootNavController: NavHostController,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 is ProfileEvent.ShowSnackBar -> {
@@ -60,19 +60,19 @@ fun ProfileScreen(
                 }
 
                 is ProfileEvent.NavigateToLogin -> {
-                    rootNavController.navigate(Route.LoginScreen) {
-                        popUpTo(Route.MainScreen) {
+                    rootNavController.navigate(Route.Login) {
+                        popUpTo(Route.Main) {
                             inclusive = true
                         }
                     }
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
     }
 
-    ProfileContent(
+    ProfileScreen(
         snackbarHostState = snackbarHostState,
         state = state,
         onEvent = viewModel::onEvent
@@ -80,7 +80,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(
+private fun ProfileScreen(
     snackbarHostState: SnackbarHostState,
     state: ProfileState,
     onEvent: (ProfileEvent) -> Unit,
@@ -106,14 +106,13 @@ private fun ProfileContent(
     ) { innerPadding ->
         Column(
             modifier = Modifier
+                .padding(horizontal = 20.dp)
                 .padding(
-                    start = 20.dp,
                     top = innerPadding.calculateTopPadding() + 32.dp,
-                    end = 20.dp
                 )
         ) {
             if (state.isLoading) {
-                LoadingContent()
+                LoadingScreen()
             } else {
                 state.user?.let { user ->
                     Text(

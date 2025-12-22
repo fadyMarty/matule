@@ -52,7 +52,7 @@ class CartViewModel(
                 createOrder()
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

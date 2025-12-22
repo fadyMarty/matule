@@ -107,7 +107,7 @@ class HomeViewModel(
                 addProductToCart(event.product)
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

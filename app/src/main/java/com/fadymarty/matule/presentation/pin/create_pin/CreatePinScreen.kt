@@ -8,22 +8,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.presentation.navigation.Route
-import com.fadymarty.matule.presentation.pin.components.PinContent
+import com.fadymarty.matule.presentation.pin.components.PinScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CreatePinScreen(
+fun CreatePinRoot(
     navController: NavHostController,
     viewModel: CreatePinViewModel = koinViewModel(),
 ) {
-    CreatePinContent(
+    CreatePinScreen(
         navController = navController,
         onEvent = viewModel::onEvent,
     )
 }
 
 @Composable
-private fun CreatePinContent(
+private fun CreatePinScreen(
     navController: NavHostController,
     onEvent: (CreatePinEvent) -> Unit,
 ) {
@@ -37,15 +37,15 @@ private fun CreatePinContent(
     LaunchedEffect(pin) {
         if (pin.length == 4) {
             onEvent(CreatePinEvent.SavePin(pin))
-            navController.navigate(Route.MainNavigation) {
-                popUpTo(Route.CreatePinScreen) {
+            navController.navigate(Route.MainGraph) {
+                popUpTo(Route.CreatePin) {
                     inclusive = true
                 }
             }
         }
     }
 
-    PinContent(
+    PinScreen(
         pin = pin,
         onNumberClick = { number ->
             if (pin.length < 4) {

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
-import com.fadymarty.matule.presentation.components.LoadingContent
+import com.fadymarty.matule.presentation.components.LoadingScreen
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
@@ -39,21 +39,20 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CartScreen(
+fun CartRoot(
     rootNavController: NavHostController,
     viewModel: CartViewModel = koinViewModel(),
 ) {
-    val context = LocalContext.current
-    val snackBarHostState = remember { SnackbarHostState() }
-
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 is CartEvent.ShowErrorSnackBar -> {
                     val job = launch {
-                        snackBarHostState.showSnackbar(
+                        snackbarHostState.showSnackbar(
                             message = context.getString(R.string.error_message),
                             duration = SnackbarDuration.Indefinite
                         )
@@ -64,42 +63,41 @@ fun CartScreen(
 
                 is CartEvent.ShowSuccessSnackBar -> {
                     val job = launch {
-                        snackBarHostState.showSnackbar(
+                        snackbarHostState.showSnackbar(
                             message = "Заказ успешно создан",
                             duration = SnackbarDuration.Indefinite
                         )
                     }
                     delay(5000)
                     job.cancel()
-                    rootNavController.navigate(Route.MainNavigation) {
-                        popUpTo(Route.CartScreen) {
+                    rootNavController.navigate(Route.MainGraph) {
+                        popUpTo(Route.Cart) {
                             inclusive = true
                         }
                     }
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
     }
 
-    CartContent(
+    CartScreen(
         state = state,
         onEvent = viewModel::onEvent,
         navController = rootNavController,
-        snackbarHostState = snackBarHostState
+        snackbarHostState = snackbarHostState
     )
 }
 
 @Composable
-private fun CartContent(
+private fun CartScreen(
     state: CartState,
     onEvent: (CartEvent) -> Unit,
     navController: NavHostController,
     snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             BigHeader(
                 modifier = Modifier
@@ -135,7 +133,7 @@ private fun CartContent(
         }
     ) { innerPadding ->
         if (state.isLoading) {
-            LoadingContent(
+            LoadingScreen(
                 modifier = Modifier.padding(top = 24.dp)
             )
         } else {

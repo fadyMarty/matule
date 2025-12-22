@@ -51,7 +51,7 @@ class ProfileViewModel(
                 }
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

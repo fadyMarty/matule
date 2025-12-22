@@ -69,7 +69,7 @@ class RegisterViewModel(
                 register()
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 

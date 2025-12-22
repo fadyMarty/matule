@@ -1,5 +1,6 @@
 package com.fadymarty.matule.presentation.catalog
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -34,7 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
-import com.fadymarty.matule.presentation.components.LoadingContent
+import com.fadymarty.matule.presentation.components.LoadingScreen
 import com.fadymarty.matule.presentation.components.ProductModal
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.CartButton
@@ -47,21 +47,21 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CatalogScreen(
+fun CatalogRoot(
     rootNavController: NavHostController,
     navController: NavHostController,
     viewModel: CatalogViewModel = koinViewModel(),
 ) {
-    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 is CatalogEvent.ShowErrorSnackBar -> {
                     val job = launch {
-                        snackBarHostState.showSnackbar(
+                        snackbarHostState.showSnackbar(
                             message = context.getString(R.string.error_message),
                             duration = SnackbarDuration.Indefinite
                         )
@@ -70,13 +70,13 @@ fun CatalogScreen(
                     job.cancel()
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
     }
 
-    CatalogContent(
-        snackBarHostState = snackBarHostState,
+    CatalogScreen(
+        snackbarHostState = snackbarHostState,
         state = state,
         onEvent = viewModel::onEvent,
         rootNavController = rootNavController,
@@ -85,15 +85,14 @@ fun CatalogScreen(
 }
 
 @Composable
-private fun CatalogContent(
+private fun CatalogScreen(
     state: CatalogState,
     onEvent: (CatalogEvent) -> Unit,
-    snackBarHostState: SnackbarHostState,
+    snackbarHostState: SnackbarHostState,
     rootNavController: NavHostController,
     navController: NavHostController,
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             Row(
                 modifier = Modifier
@@ -115,14 +114,14 @@ private fun CatalogContent(
                     }
                 )
                 Spacer(Modifier.width(38.dp))
-                Icon(
+                Image(
                     modifier = Modifier
                         .size(32.dp)
                         .clickable(
                             interactionSource = null,
                             indication = null
                         ) {
-                            navController.navigate(Route.ProfileScreen) {
+                            navController.navigate(Route.Profile) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -130,20 +129,20 @@ private fun CatalogContent(
                                 restoreState = true
                             }
                         },
-                    painter = painterResource(R.drawable.ic_user),
+                    painter = painterResource(R.drawable.img_user_icon),
                     contentDescription = null
                 )
             }
         },
         snackbarHost = {
             SnackbarHost(
-                hostState = snackBarHostState,
+                hostState = snackbarHostState,
                 snackbar = {
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
                         message = it.visuals.message,
                         onClose = {
-                            snackBarHostState.currentSnackbarData?.dismiss()
+                            snackbarHostState.currentSnackbarData?.dismiss()
                         }
                     )
                 }
@@ -151,7 +150,7 @@ private fun CatalogContent(
         }
     ) { innerPadding ->
         if (state.isLoading) {
-            LoadingContent(
+            LoadingScreen(
                 modifier = Modifier
                     .padding(
                         top = innerPadding.calculateTopPadding() + 24.dp
@@ -222,7 +221,7 @@ private fun CatalogContent(
                                 vertical = 32.dp
                             ),
                         onClick = {
-                            rootNavController.navigate(Route.CartScreen)
+                            rootNavController.navigate(Route.Cart)
                         },
                         price = state.bucket.sumOf { cart ->
                             state.products.first {

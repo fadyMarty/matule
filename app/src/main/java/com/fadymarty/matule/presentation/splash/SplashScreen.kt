@@ -9,11 +9,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
@@ -23,24 +23,26 @@ import com.fadymarty.matule_ui_kit.common.theme.RobotoFamily
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SplashScreen(
+fun SplashRoot(
     navController: NavHostController,
     viewModel: SplashViewModel = koinViewModel(),
 ) {
-    LaunchedEffect(Unit) {
+    val context = LocalContext.current
+
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 SplashEvent.NavigateToEnterPin -> {
-                    navController.navigate(Route.EnterPinScreen) {
-                        popUpTo(Route.SplashScreen) {
+                    navController.navigate(Route.EnterPin) {
+                        popUpTo(Route.Splash) {
                             inclusive = true
                         }
                     }
                 }
 
                 SplashEvent.NavigateToLogin -> {
-                    navController.navigate(Route.LoginScreen) {
-                        popUpTo(Route.SplashScreen) {
+                    navController.navigate(Route.Login) {
+                        popUpTo(Route.Splash) {
                             inclusive = true
                         }
                     }
@@ -48,11 +50,12 @@ fun SplashScreen(
             }
         }
     }
-    SplashContent()
+
+    SplashScreen()
 }
 
 @Composable
-private fun SplashContent() {
+private fun SplashScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -73,13 +76,5 @@ private fun SplashContent() {
             textAlign = TextAlign.Center,
             color = MatuleTheme.colorScheme.onAccent
         )
-    }
-}
-
-@Preview
-@Composable
-private fun SplashContentPreview() {
-    MatuleTheme {
-        SplashContent()
     }
 }

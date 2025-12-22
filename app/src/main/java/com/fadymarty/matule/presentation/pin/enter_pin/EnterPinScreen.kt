@@ -9,24 +9,24 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.fadymarty.matule.presentation.navigation.Route
-import com.fadymarty.matule.presentation.pin.components.PinContent
+import com.fadymarty.matule.presentation.pin.components.PinScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun EnterPinScreen(
+fun EnterPinRoot(
     navController: NavHostController,
     viewModel: EnterPinViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    EnterPinContent(
+    EnterPinScreen(
         navController = navController,
         state = state
     )
 }
 
 @Composable
-private fun EnterPinContent(
+private fun EnterPinScreen(
     navController: NavHostController,
     state: EnterPinState,
 ) {
@@ -40,8 +40,8 @@ private fun EnterPinContent(
     LaunchedEffect(pin) {
         if (pin.length == 4) {
             if (pin == state.pin) {
-                navController.navigate(Route.MainNavigation) {
-                    popUpTo(Route.EnterPinScreen) {
+                navController.navigate(Route.MainGraph) {
+                    popUpTo(Route.EnterPin) {
                         inclusive = true
                     }
                 }
@@ -52,7 +52,7 @@ private fun EnterPinContent(
         }
     }
 
-    PinContent(
+    PinScreen(
         pin = pin,
         onNumberClick = { number ->
             if (pin.length < 4) {

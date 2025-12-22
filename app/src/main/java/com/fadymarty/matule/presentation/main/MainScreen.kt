@@ -1,11 +1,12 @@
 package com.fadymarty.matule.presentation.main
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -14,12 +15,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.fadymarty.matule.presentation.catalog.CatalogScreen
-import com.fadymarty.matule.presentation.home.HomeScreen
+import com.fadymarty.matule.R
+import com.fadymarty.matule.presentation.catalog.CatalogRoot
+import com.fadymarty.matule.presentation.home.HomeRoot
 import com.fadymarty.matule.presentation.navigation.Route
-import com.fadymarty.matule.presentation.profile.ProfileScreen
-import com.fadymarty.matule.presentation.projects.CreateProjectScreen
-import com.fadymarty.matule_ui_kit.presentation.components.icons.MatuleIcons
+import com.fadymarty.matule.presentation.profile.ProfileRoot
+import com.fadymarty.matule.presentation.projects.CreateProjectRoot
 import com.fadymarty.matule_ui_kit.presentation.components.tab_bar.TabBar
 import com.fadymarty.matule_ui_kit.presentation.components.tab_bar.TabBarItem
 
@@ -28,45 +29,44 @@ fun MainScreen(
     rootNavController: NavHostController,
 ) {
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val selectedRoute = navBackStackEntry?.destination?.route
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         bottomBar = {
             TabBar(
                 items = listOf(
                     TabBarItem(
-                        icon = MatuleIcons.Home,
+                        icon = ImageVector.vectorResource(R.drawable.ic_home),
                         label = "Главная",
-                        route = Route.HomeScreen
+                        route = Route.Home
                     ),
                     TabBarItem(
-                        icon = MatuleIcons.Catalog,
+                        icon = ImageVector.vectorResource(R.drawable.ic_catalog),
                         label = "Каталог",
-                        route = Route.CatalogScreen
+                        route = Route.Catalog
                     ),
                     TabBarItem(
-                        icon = MatuleIcons.Projects,
+                        icon = ImageVector.vectorResource(R.drawable.ic_projects),
                         label = "Проекты",
                         iconSize = 24.dp,
                         spacing = 3.dp,
-                        route = Route.ProjectsScreen
+                        route = Route.Projects
                     ),
                     TabBarItem(
-                        icon = MatuleIcons.Profile,
+                        icon = ImageVector.vectorResource(R.drawable.ic_profile),
                         label = "Профиль",
-                        route = Route.ProfileScreen
+                        route = Route.Profile
                     )
                 ),
-                selectedRoute = selectedRoute,
+                selectedRoute = currentRoute,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
-                        launchSingleTop = true
                         restoreState = true
+                        launchSingleTop = true
                     }
                 }
             )
@@ -77,32 +77,32 @@ fun MainScreen(
                 bottom = innerPadding.calculateBottomPadding()
             ),
             navController = navController,
-            startDestination = Route.HomeScreen
+            startDestination = Route.Home
         ) {
-            composable<Route.HomeScreen> {
-                HomeScreen()
+            composable<Route.Home> {
+                HomeRoot()
             }
 
-            composable<Route.CatalogScreen> {
-                CatalogScreen(
+            composable<Route.Catalog> {
+                CatalogRoot(
                     rootNavController = rootNavController,
                     navController = navController
                 )
             }
 
-            navigation<Route.ProjectsNavigation>(
-                startDestination = Route.ProjectsScreen
+            navigation<Route.ProjectsGraph>(
+                startDestination = Route.Projects
             ) {
-                composable<Route.ProjectsScreen> {
+                composable<Route.Projects> {
 
                 }
-                composable<Route.CreateProjectScreen> {
-                    CreateProjectScreen()
+                composable<Route.CreateProject> {
+                    CreateProjectRoot()
                 }
             }
 
-            composable<Route.ProfileScreen> {
-                ProfileScreen(
+            composable<Route.Profile> {
+                ProfileRoot(
                     rootNavController = rootNavController
                 )
             }

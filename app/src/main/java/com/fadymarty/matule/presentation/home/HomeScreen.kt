@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.fadymarty.matule.R
-import com.fadymarty.matule.presentation.components.LoadingContent
+import com.fadymarty.matule.presentation.components.LoadingScreen
 import com.fadymarty.matule.presentation.components.ProductModal
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.ChipButton
@@ -48,19 +48,19 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun HomeScreen(
+fun HomeRoot(
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val snackBarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 is HomeEvent.ShowErrorSnackBar -> {
                     val job = launch {
-                        snackBarHostState.showSnackbar(
+                        snackbarHostState.showSnackbar(
                             message = context.getString(R.string.error_message),
                             duration = SnackbarDuration.Indefinite
                         )
@@ -69,26 +69,25 @@ fun HomeScreen(
                     job.cancel()
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
     }
 
-    HomeContent(
+    HomeScreen(
         state = state,
         onEvent = viewModel::onEvent,
-        snackBarHostState = snackBarHostState
+        snackbarHostState = snackbarHostState
     )
 }
 
 @Composable
-private fun HomeContent(
+private fun HomeScreen(
     state: HomeState,
     onEvent: (HomeEvent) -> Unit,
-    snackBarHostState: SnackbarHostState,
+    snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             SearchInput(
                 modifier = Modifier
@@ -112,12 +111,12 @@ private fun HomeContent(
         },
         snackbarHost = {
             SnackbarHost(
-                hostState = snackBarHostState,
+                hostState = snackbarHostState,
                 snackbar = {
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
                         onClose = {
-                            snackBarHostState.currentSnackbarData?.dismiss()
+                            snackbarHostState.currentSnackbarData?.dismiss()
                         },
                         message = it.visuals.message
                     )
@@ -126,7 +125,7 @@ private fun HomeContent(
         }
     ) { innerPadding ->
         if (state.isLoading) {
-            LoadingContent(
+            LoadingScreen(
                 modifier = Modifier
                     .padding(
                         top = innerPadding.calculateTopPadding() + 24.dp

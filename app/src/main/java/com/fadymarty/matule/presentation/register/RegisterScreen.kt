@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -22,48 +23,44 @@ import com.fadymarty.matule_ui_kit.presentation.components.select.Select
 import org.koin.compose.viewmodel.koinActivityViewModel
 
 @Composable
-fun RegisterScreen(
+fun RegisterRoot(
     navController: NavHostController,
     viewModel: RegisterViewModel = koinActivityViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.event.collect { event ->
             when (event) {
                 is RegisterEvent.NavigateToCreatePassword -> {
-                    navController.navigate(Route.CreatePasswordScreen)
+                    navController.navigate(Route.CreatePassword)
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
     }
 
-    RegisterContent(
+    RegisterScreen(
         state = state,
         onEvent = viewModel::onEvent
     )
 }
 
 @Composable
-private fun RegisterContent(
+private fun RegisterScreen(
     state: RegisterState,
     onEvent: (RegisterEvent) -> Unit,
 ) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    start = 20.dp,
-                    top = innerPadding.calculateTopPadding() + 32.dp,
-                    end = 20.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 32.dp
-                )
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp)
         ) {
+            Spacer(Modifier.height(32.dp))
             Text(
                 text = "Создание Профиля",
                 style = MatuleTheme.typography.title1ExtraBold
@@ -145,6 +142,7 @@ private fun RegisterContent(
                         state.gender != null &&
                         state.email.isNotBlank()
             )
+            Spacer(Modifier.height(32.dp))
         }
     }
 }

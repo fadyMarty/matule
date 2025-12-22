@@ -21,12 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.fadymarty.matule.R
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
-import com.fadymarty.matule_ui_kit.presentation.components.icons.MatuleIcons
 
 @Composable
-fun PinContent(
+fun PinScreen(
     pin: String,
     onNumberClick: (Int) -> Unit,
     onDeleteClick: () -> Unit,
@@ -34,9 +36,7 @@ fun PinContent(
     title: String,
     subtitle: String = "",
 ) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -107,7 +107,7 @@ fun PinContent(
                             ) {
                                 Icon(
                                     modifier = Modifier.size(35.dp, 24.dp),
-                                    imageVector = MatuleIcons.Del,
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_del),
                                     contentDescription = null
                                 )
                             }
