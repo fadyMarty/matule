@@ -30,7 +30,7 @@ fun SplashRoot(
     val context = LocalContext.current
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 SplashEvent.NavigateToEnterPin -> {
                     navController.navigate(Route.EnterPin) {

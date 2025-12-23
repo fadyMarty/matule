@@ -8,7 +8,7 @@ data class HomeState(
     val isLoading: Boolean = true,
     val news: List<News> = emptyList(),
     val products: List<Product> = emptyList(),
-    val bucket: List<Cart?> = emptyList(),
+    val carts: List<Cart> = emptyList(),
     val types: List<String> = emptyList(),
     val searchQuery: String = "",
     val selectedProduct: Product? = null,

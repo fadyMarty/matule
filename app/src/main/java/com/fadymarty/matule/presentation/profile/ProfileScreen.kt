@@ -47,7 +47,7 @@ fun ProfileRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is ProfileEvent.ShowSnackBar -> {
                     val job = launch {
@@ -73,17 +73,17 @@ fun ProfileRoot(
     }
 
     ProfileScreen(
-        snackbarHostState = snackbarHostState,
         state = state,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        snackbarHostState = snackbarHostState,
     )
 }
 
 @Composable
 private fun ProfileScreen(
-    snackbarHostState: SnackbarHostState,
     state: ProfileState,
     onEvent: (ProfileEvent) -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
 

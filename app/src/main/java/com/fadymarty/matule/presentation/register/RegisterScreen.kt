@@ -31,7 +31,7 @@ fun RegisterRoot(
     val context = LocalContext.current
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is RegisterEvent.NavigateToCreatePassword -> {
                     navController.navigate(Route.CreatePassword)

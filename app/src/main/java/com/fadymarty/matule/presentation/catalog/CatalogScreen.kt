@@ -57,7 +57,7 @@ fun CatalogRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is CatalogEvent.ShowErrorSnackBar -> {
                     val job = launch {
@@ -195,7 +195,7 @@ private fun CatalogScreen(
                         .weight(1f),
                     contentPadding = PaddingValues(
                         top = 12.dp,
-                        bottom = if (state.bucket.isNotEmpty()) 120.dp else 0.dp
+                        bottom = if (state.carts.isNotEmpty()) 120.dp else 0.dp
                     )
                 ) {
                     items(state.products) { product ->
@@ -204,7 +204,7 @@ private fun CatalogScreen(
                             title = product.title,
                             type = product.type,
                             price = product.price,
-                            added = state.bucket.any { it?.productId == product.id },
+                            added = state.carts.any { it?.productId == product.id },
                             onClick = {
                                 onEvent(CatalogEvent.SelectProduct(product))
                             }
@@ -212,7 +212,7 @@ private fun CatalogScreen(
                         Spacer(Modifier.height(16.dp))
                     }
                 }
-                if (state.bucket.isNotEmpty()) {
+                if (state.carts.isNotEmpty()) {
                     CartButton(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -223,7 +223,7 @@ private fun CatalogScreen(
                         onClick = {
                             rootNavController.navigate(Route.Cart)
                         },
-                        price = state.bucket.sumOf { cart ->
+                        price = state.carts.sumOf { cart ->
                             state.products.first {
                                 it.id == cart?.productId
                             }.price

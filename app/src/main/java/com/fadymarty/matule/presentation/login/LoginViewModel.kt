@@ -21,8 +21,8 @@ class LoginViewModel(
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
 
-    private val _event: Channel<LoginEvent> = Channel()
-    val event = _event.receiveAsFlow()
+    private val eventChannel = Channel<LoginEvent>()
+    val events = eventChannel.receiveAsFlow()
 
     fun onEvent(event: LoginEvent) {
         when (event) {
@@ -62,11 +62,11 @@ class LoginViewModel(
                 password = _state.value.password
             )
                 .onSuccess {
-                    _event.send(LoginEvent.NavigateToCreatePin)
+                    eventChannel.send(LoginEvent.NavigateToCreatePin)
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(LoginEvent.ShowErrorSnackBar)
+                    eventChannel.send(LoginEvent.ShowErrorSnackBar)
                 }
         }
     }

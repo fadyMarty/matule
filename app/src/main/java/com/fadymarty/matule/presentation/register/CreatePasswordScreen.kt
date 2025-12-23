@@ -42,7 +42,7 @@ fun PasswordRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is RegisterEvent.ShowSnackBar -> {
                     snackbarHostState.showSnackbar(

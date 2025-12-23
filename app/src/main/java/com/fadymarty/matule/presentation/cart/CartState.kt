@@ -5,6 +5,6 @@ import com.fadymarty.network.domain.model.Product
 
 data class CartState(
     val isLoading: Boolean = true,
-    val bucket: List<Cart> = emptyList(),
-    val catalog: List<Product> = emptyList(),
+    val carts: List<Cart> = emptyList(),
+    val products: List<Product> = emptyList(),
 )

@@ -56,7 +56,7 @@ fun HomeRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is HomeEvent.ShowErrorSnackBar -> {
                     val job = launch {
@@ -238,7 +238,7 @@ private fun HomeScreen(
                         title = product.title,
                         type = product.type,
                         price = product.price,
-                        added = state.bucket.any { it?.productId == product.id },
+                        added = state.carts.any { it?.productId == product.id },
                         onClick = {
                             onEvent(HomeEvent.SelectProduct(product))
                         }

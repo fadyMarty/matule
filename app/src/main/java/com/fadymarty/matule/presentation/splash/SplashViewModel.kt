@@ -12,16 +12,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 class SplashViewModel(
     private val getPinUseCase: GetPinUseCase,
 ) : ViewModel() {
-    private val _event: Channel<SplashEvent> = Channel()
-    val event = _event.receiveAsFlow()
+    
+    private val eventChannel = Channel<SplashEvent>()
+    val events = eventChannel.receiveAsFlow()
 
     init {
         getPinUseCase().onEach { pin ->
             delay(1500)
             if (pin != null) {
-                _event.send(SplashEvent.NavigateToEnterPin)
+                eventChannel.send(SplashEvent.NavigateToEnterPin)
             } else {
-                _event.send(SplashEvent.NavigateToLogin)
+                eventChannel.send(SplashEvent.NavigateToLogin)
             }
         }.launchIn(viewModelScope)
     }

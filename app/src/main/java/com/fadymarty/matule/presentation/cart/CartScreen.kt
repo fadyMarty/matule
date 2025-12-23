@@ -48,7 +48,7 @@ fun CartRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(context) {
-        viewModel.event.collect { event ->
+        viewModel.events.collect { event ->
             when (event) {
                 is CartEvent.ShowErrorSnackBar -> {
                     val job = launch {
@@ -156,8 +156,8 @@ private fun CartScreen(
                         bottom = 32.dp
                     )
                 ) {
-                    items(state.bucket) { cart ->
-                        val product = state.catalog.first { it.id == cart.productId }
+                    items(state.carts) { cart ->
+                        val product = state.products.first { it.id == cart.productId }
 
                         CartCard(
                             title = product.title,
@@ -187,8 +187,8 @@ private fun CartScreen(
                             Spacer(Modifier.weight(1f))
                             Text(
                                 text = "${
-                                    state.bucket.sumOf { cart ->
-                                        state.catalog.first {
+                                    state.carts.sumOf { cart ->
+                                        state.products.first {
                                             it.id == cart.productId
                                         }.price * cart.count
                                     }
@@ -210,7 +210,7 @@ private fun CartScreen(
                     onClick = {
                         onEvent(CartEvent.CreateOrder)
                     },
-                    active = state.bucket.isNotEmpty()
+                    active = state.carts.isNotEmpty()
                 )
             }
         }

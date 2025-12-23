@@ -25,8 +25,8 @@ class ProfileViewModel(
     private val _state = MutableStateFlow(ProfileState())
     val state = _state.asStateFlow()
 
-    private val _event: Channel<ProfileEvent> = Channel()
-    val event = _event.receiveAsFlow()
+    private val eventChannel = Channel<ProfileEvent>()
+    val events = eventChannel.receiveAsFlow()
 
     init {
         isNotificationsEnabled()
@@ -47,7 +47,7 @@ class ProfileViewModel(
             is ProfileEvent.Logout -> {
                 viewModelScope.launch {
                     clearSessionUseCase()
-                    _event.send(ProfileEvent.NavigateToLogin)
+                    eventChannel.send(ProfileEvent.NavigateToLogin)
                 }
             }
 
@@ -68,7 +68,7 @@ class ProfileViewModel(
                     }
                 }
                 .onFailure {
-                    _event.send(ProfileEvent.ShowSnackBar)
+                    eventChannel.send(ProfileEvent.ShowSnackBar)
                 }
         }
     }

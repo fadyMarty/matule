@@ -24,8 +24,8 @@ class RegisterViewModel(
     private val _state = MutableStateFlow(RegisterState())
     val state = _state.asStateFlow()
 
-    private val _event: Channel<RegisterEvent> = Channel()
-    val event = _event.receiveAsFlow()
+    private val eventChannel = Channel<RegisterEvent>()
+    val events = eventChannel.receiveAsFlow()
 
     fun onEvent(event: RegisterEvent) {
         when (event) {
@@ -80,7 +80,7 @@ class RegisterViewModel(
             return
         }
         viewModelScope.launch {
-            _event.send(RegisterEvent.NavigateToCreatePassword)
+            eventChannel.send(RegisterEvent.NavigateToCreatePassword)
         }
     }
 
@@ -114,11 +114,11 @@ class RegisterViewModel(
         viewModelScope.launch {
             registerUseCase(user)
                 .onSuccess {
-                    _event.send(RegisterEvent.NavigateToCreatePin)
+                    eventChannel.send(RegisterEvent.NavigateToCreatePin)
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    _event.send(RegisterEvent.ShowSnackBar)
+                    eventChannel.send(RegisterEvent.ShowSnackBar)
                 }
         }
     }
