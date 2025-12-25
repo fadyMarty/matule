@@ -1,5 +1,6 @@
 package com.fadymarty.matule.presentation.login
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,26 +11,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingScreen
-import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.LoginButton
@@ -38,32 +39,29 @@ import com.fadymarty.matule_ui_kit.presentation.components.input.PasswordInput
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun LoginRoot(
-    navController: NavHostController,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToCreatePin: () -> Unit,
     viewModel: LoginViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.NavigateToCreatePin -> {
-                    navController.navigate(Route.CreatePin) {
-                        popUpTo(Route.Login) {
-                            inclusive = true
-                        }
-                    }
-                }
-
+                LoginEvent.NavigateToRegister -> onNavigateToRegister()
+                LoginEvent.NavigateToCreatePin -> onNavigateToCreatePin()
                 is LoginEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.error_message)
+                            message = context.getString(R.string.error_message),
+                            duration = SnackbarDuration.Indefinite
                         )
                     }
                     delay(5000)
@@ -77,7 +75,6 @@ fun LoginRoot(
 
     LoginScreen(
         snackbarHostState = snackbarHostState,
-        navController = navController,
         state = state,
         onEvent = viewModel::onEvent
     )
@@ -85,11 +82,14 @@ fun LoginRoot(
 
 @Composable
 private fun LoginScreen(
-    snackbarHostState: SnackbarHostState,
-    navController: NavHostController,
     state: LoginState,
     onEvent: (LoginEvent) -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
+    var isPasswordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(
@@ -97,16 +97,18 @@ private fun LoginScreen(
             ) {
                 SnackBar(
                     modifier = Modifier.padding(start = 20.dp, end = 8.dp),
-                    onClose = {
-                        snackbarHostState.currentSnackbarData?.dismiss()
+                    message = it.visuals.message,
+                    onDismiss = {
+                        it.dismiss()
                     },
-                    message = it.visuals.message
                 )
             }
         }
     ) { innerPadding ->
         if (state.isLoading) {
-            LoadingScreen()
+            LoadingScreen(
+                modifier = Modifier.padding(innerPadding)
+            )
         } else {
             Column(
                 modifier = Modifier
@@ -152,9 +154,10 @@ private fun LoginScreen(
                         onEvent(LoginEvent.PasswordChanged(it))
                     },
                     label = "Пароль",
-                    error = if (!state.isPasswordValid) {
-                        "Пароль должен содержать заглавные и строчные буквы, цифры, пробелы и специальные символы и быть не менее 8 символов"
-                    } else null
+                    isVisible = isPasswordVisible,
+                    onTrailingIconClick = {
+                        isPasswordVisible = !isPasswordVisible
+                    }
                 )
                 Spacer(Modifier.height(14.dp))
                 BigButton(
@@ -162,7 +165,7 @@ private fun LoginScreen(
                     onClick = {
                         onEvent(LoginEvent.Login)
                     },
-                    active = state.email.isNotBlank() && state.password.isNotBlank()
+                    enabled = state.email.isNotBlank() && state.password.isNotBlank()
                 )
                 Spacer(Modifier.height(15.dp))
                 Text(
@@ -172,7 +175,7 @@ private fun LoginScreen(
                             interactionSource = null,
                             indication = null
                         ) {
-                            navController.navigate(Route.Register)
+                            onEvent(LoginEvent.NavigateToRegister)
                         },
                     text = "Зарегистрироваться",
                     style = MatuleTheme.typography.textRegular,
@@ -180,26 +183,28 @@ private fun LoginScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.weight(1f))
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Или войдите с помощью",
-                    style = MatuleTheme.typography.textRegular,
-                    color = MatuleTheme.colorScheme.placeholder,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.height(16.dp))
-                LoginButton(
-                    label = "Войти с VK",
-                    onClick = {},
-                    trailingIcon = ImageVector.vectorResource(R.drawable.ic_vk)
-                )
-                Spacer(Modifier.height(16.dp))
-                LoginButton(
-                    label = "Войти с Yandex",
-                    onClick = {},
-                    trailingIcon = ImageVector.vectorResource(R.drawable.ic_yandex)
-                )
-                Spacer(Modifier.height(56.dp))
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Или войдите с помощью",
+                        style = MatuleTheme.typography.textRegular,
+                        color = MatuleTheme.colorScheme.placeholder,
+                        textAlign = TextAlign.Center
+                    )
+                    LoginButton(
+                        label = "Войти с VK",
+                        icon = R.drawable.ic_vk,
+                        onClick = {}
+                    )
+                    LoginButton(
+                        label = "Войти с Yandex",
+                        icon = R.drawable.ic_yandex,
+                        onClick = {}
+                    )
+                    Spacer(Modifier.height(56.dp))
+                }
             }
         }
     }

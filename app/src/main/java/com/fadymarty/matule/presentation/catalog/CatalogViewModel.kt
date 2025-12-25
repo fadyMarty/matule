@@ -22,12 +22,12 @@ import kotlinx.coroutines.launch
 
 class CatalogViewModel(
     private val searchProductsUseCase: SearchProductsUseCase,
+    private val getCartsUseCase: GetCartsUseCase,
     private val observeCartsUseCase: ObserveCartsUseCase,
-    private val getCartsUseUse: GetCartsUseCase,
     private val addProductToCartUseCase: AddProductToCartUseCase,
     private val deleteCartUseCase: DeleteCartUseCase,
 ) : ViewModel() {
-    
+
     private val _state = MutableStateFlow(CatalogState())
     val state = _state.asStateFlow()
 
@@ -37,10 +37,6 @@ class CatalogViewModel(
     private var searchJob: Job? = null
 
     init {
-        initialize()
-    }
-
-    fun initialize() {
         _state.update { it.copy(isLoading = true) }
 
         observeCartsUseCase().onEach { carts ->
@@ -50,30 +46,28 @@ class CatalogViewModel(
         viewModelScope.launch {
             val products = async {
                 searchProductsUseCase(
-                    query = _state.value.searchQuery,
-                    type = _state.value.selectedType
-                )
-            }
-            val carts = async { getCartsUseUse() }
-
-            products.await()
-                .onSuccess { products ->
+                    query = _state.value.searchQuery
+                ).onSuccess { products ->
                     _state.update {
                         it.copy(
                             products = products,
-                            types = products.map { product -> product.typeCloses }.distinct()
+                            types = products.map { product ->
+                                product.typeCloses
+                            }.distinct()
                         )
                     }
                 }
-                .onFailure {
-                    eventChannel.send(CatalogEvent.ShowErrorSnackBar)
-                }
-            carts.await()
-                .onFailure {
-                    eventChannel.send(CatalogEvent.ShowErrorSnackBar)
-                }
+            }
+            val carts = async { getCartsUseCase() }
 
-            _state.update { it.copy(isLoading = false) }
+            val productsResult = products.await()
+            val cartsResult = carts.await()
+            val results = listOf(productsResult, cartsResult)
+            if (results.any { it.isSuccess }) {
+                _state.update { it.copy(isLoading = false) }
+            } else {
+                eventChannel.send(CatalogEvent.ShowErrorSnackBar)
+            }
         }
     }
 
@@ -84,96 +78,92 @@ class CatalogViewModel(
                 searchProducts()
             }
 
-            is CatalogEvent.SelectProduct -> {
-                selectProduct(product = event.product)
-            }
-
-            is CatalogEvent.SelectType -> {
-                _state.update { it.copy(selectedType = event.type) }
+            CatalogEvent.ClearSearchQuery -> {
+                _state.update { it.copy(searchQuery = "") }
                 searchProducts()
             }
 
-            is CatalogEvent.AddProductToBucket -> {
+            is CatalogEvent.SelectType -> {
+                _state.update { it.copy(type = event.type) }
+            }
+
+            is CatalogEvent.AddProductToCart -> {
                 addProductToCart(event.product)
+            }
+
+            is CatalogEvent.ShowProductModal -> {
+                _state.update { it.copy(product = event.product) }
+            }
+
+            is CatalogEvent.HideProductModal -> {
+                _state.update { it.copy(product = null) }
+            }
+
+            CatalogEvent.NavigateToProfile -> {
+                viewModelScope.launch {
+                    eventChannel.send(CatalogEvent.NavigateToProfile)
+                }
+            }
+
+            CatalogEvent.NavigateToCart -> {
+                viewModelScope.launch {
+                    eventChannel.send(CatalogEvent.NavigateToCart)
+                }
             }
 
             else -> Unit
         }
     }
 
-    private fun selectProduct(product: Product?) {
-        val cart = _state.value.carts.firstOrNull { it.productId == product?.id }
-
-        if (cart?.id != null) {
-            _state.update { it.copy(isLoading = true) }
-            viewModelScope.launch {
-                deleteCartUseCase(cart.id!!)
-                    .onSuccess {
-                        _state.update {
-                            it.copy(isLoading = false)
-                        }
-                    }
-                    .onFailure {
-                        _state.update { it.copy(isLoading = false) }
-                        eventChannel.send(CatalogEvent.ShowErrorSnackBar)
-                    }
-            }
-        } else {
-            _state.update { it.copy(selectedProduct = product) }
-        }
-    }
-
     private fun searchProducts() {
-        _state.update { it.copy(isLoading = true) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            delay(1000L)
+            delay(500)
+            _state.update { it.copy(isLoading = true) }
             searchProductsUseCase(
-                query = _state.value.searchQuery,
-                type = _state.value.selectedType
+                query = _state.value.searchQuery
             )
                 .onSuccess { products ->
-                    if (_state.value.searchQuery.isEmpty() && _state.value.selectedType == null) {
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                products = products,
-                                types = products.map { productItem ->
-                                    productItem.typeCloses
-                                }.distinct()
-                            )
-                        }
-                    } else {
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                products = products
-                            )
-                        }
-                    }
-                }
-                .onFailure {
-                    eventChannel.send(CatalogEvent.ShowErrorSnackBar)
-                }
-        }
-    }
-
-    private fun addProductToCart(product: Product) {
-        _state.update { it.copy(isLoading = true) }
-        viewModelScope.launch {
-            addProductToCartUseCase(product)
-                .onSuccess {
                     _state.update {
                         it.copy(
-                            isLoading = false,
-                            selectedProduct = null
+                            products = products,
+                            types = products.map { product ->
+                                product.typeCloses
+                            }.distinct()
                         )
                     }
                 }
                 .onFailure {
-                    _state.update { it.copy(isLoading = false) }
                     eventChannel.send(CatalogEvent.ShowErrorSnackBar)
                 }
+            _state.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private fun addProductToCart(product: Product) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            val cart = _state.value.carts.firstOrNull {
+                it.productId == product.id
+            }
+            if (cart != null) {
+                deleteCartUseCase(cart.id!!)
+                    .onSuccess {
+                        _state.update { it.copy(product = null) }
+                    }
+                    .onFailure {
+                        eventChannel.send(CatalogEvent.ShowErrorSnackBar)
+                    }
+            } else {
+                addProductToCartUseCase(product)
+                    .onSuccess {
+                        _state.update { it.copy(product = null) }
+                    }
+                    .onFailure {
+                        eventChannel.send(CatalogEvent.ShowErrorSnackBar)
+                    }
+            }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 }

@@ -3,7 +3,6 @@ package com.fadymarty.matule.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fadymarty.matule.domain.use_case.validation.ValidateEmailUseCase
-import com.fadymarty.matule.domain.use_case.validation.ValidatePasswordUseCase
 import com.fadymarty.network.domain.use_case.user.LoginUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val validateEmailUseCase: ValidateEmailUseCase,
-    private val validatePasswordUseCase: ValidatePasswordUseCase,
     private val loginUseCase: LoginUseCase,
 ) : ViewModel() {
 
@@ -27,11 +25,17 @@ class LoginViewModel(
     fun onEvent(event: LoginEvent) {
         when (event) {
             is LoginEvent.EmailChanged -> {
-                _state.update { it.copy(email = event.value) }
+                _state.update { it.copy(email = event.email) }
             }
 
             is LoginEvent.PasswordChanged -> {
-                _state.update { it.copy(password = event.value) }
+                _state.update { it.copy(password = event.password) }
+            }
+
+            is LoginEvent.NavigateToRegister -> {
+                viewModelScope.launch {
+                    eventChannel.send(LoginEvent.NavigateToRegister)
+                }
             }
 
             is LoginEvent.Login -> {
@@ -44,23 +48,17 @@ class LoginViewModel(
 
     private fun login() {
         val isEmailValid = validateEmailUseCase(_state.value.email)
-        val isPasswordValid = validatePasswordUseCase(_state.value.password)
         _state.update {
             it.copy(
-                isEmailValid = isEmailValid,
-                isPasswordValid = isPasswordValid
+                isEmailValid = isEmailValid
             )
         }
-        if (!isEmailValid || !isPasswordValid) {
+        if (!isEmailValid) {
             return
         }
-
-        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            loginUseCase(
-                email = _state.value.email,
-                password = _state.value.password
-            )
+            _state.update { it.copy(isLoading = true) }
+            loginUseCase(_state.value.email, _state.value.password)
                 .onSuccess {
                     eventChannel.send(LoginEvent.NavigateToCreatePin)
                 }

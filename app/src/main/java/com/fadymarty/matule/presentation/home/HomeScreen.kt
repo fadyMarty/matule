@@ -1,5 +1,6 @@
 package com.fadymarty.matule.presentation.home
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,8 +45,9 @@ import com.fadymarty.matule_ui_kit.presentation.components.input.SearchInput
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun HomeRoot(
     viewModel: HomeViewModel = koinViewModel(),
@@ -55,7 +56,7 @@ fun HomeRoot(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is HomeEvent.ShowErrorSnackBar -> {
@@ -91,8 +92,6 @@ private fun HomeScreen(
         topBar = {
             SearchInput(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MatuleTheme.colorScheme.background)
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp)
                     .padding(
@@ -104,8 +103,8 @@ private fun HomeScreen(
                     onEvent(HomeEvent.SearchQueryChanged(it))
                 },
                 hint = "Искать описания",
-                onClear = {
-                    onEvent(HomeEvent.SearchQueryChanged(""))
+                onClearClick = {
+                    onEvent(HomeEvent.ClearSearchQuery)
                 }
             )
         },
@@ -115,8 +114,8 @@ private fun HomeScreen(
                 snackbar = {
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
-                        onClose = {
-                            snackbarHostState.currentSnackbarData?.dismiss()
+                        onDismiss = {
+                            it.dismiss()
                         },
                         message = it.visuals.message
                     )
@@ -128,15 +127,17 @@ private fun HomeScreen(
             LoadingScreen(
                 modifier = Modifier
                     .padding(
-                        top = innerPadding.calculateTopPadding() + 24.dp
+                        top = innerPadding.calculateTopPadding()
                     )
             )
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding() + 24.dp
-                )
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = innerPadding.calculateTopPadding()
+                    ),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp)
             ) {
                 item {
                     Text(
@@ -146,8 +147,9 @@ private fun HomeScreen(
                         color = MatuleTheme.colorScheme.placeholder
                     )
                     Spacer(Modifier.height(16.dp))
+                }
+                item {
                     LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -157,15 +159,18 @@ private fun HomeScreen(
                                     .size(270.dp, 152.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(
-                                        brush = if (index % 2 == 0) {
-                                            Brush.horizontalGradient(
-                                                colors = listOf(
+                                        brush = Brush.horizontalGradient(
+                                            colors = if (index % 2 == 0) {
+                                                listOf(
                                                     Color(0xFF97D9F0),
                                                     Color(0xFF92E9D4)
                                                 )
-                                            )
-                                        } else Brush.horizontalGradient(
-                                            colors = listOf(Color(0xFF76B3FF), Color(0xFFCDE3FF))
+                                            } else {
+                                                listOf(
+                                                    Color(0xFF76B3FF),
+                                                    Color(0xFFCDE3FF)
+                                                )
+                                            }
                                         )
                                     )
                             ) {
@@ -201,62 +206,70 @@ private fun HomeScreen(
                     Spacer(Modifier.height(32.dp))
                     Text(
                         modifier = Modifier.padding(horizontal = 21.dp),
-                        text = "Каталог описаний"
+                        text = "Каталог описаний",
+                        style = MatuleTheme.typography.title3Semibold,
+                        color = MatuleTheme.colorScheme.placeholder
                     )
                     Spacer(Modifier.height(15.dp))
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item {
-                            ChipButton(
-                                selected = state.selectedType == null,
-                                label = "Все",
-                                onClick = {
-                                    onEvent(HomeEvent.SelectType(null))
-                                }
-                            )
+                }
+                if (state.products.isNotEmpty()) {
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            item {
+                                ChipButton(
+                                    selected = state.type == null,
+                                    label = "Все",
+                                    onClick = {
+                                        onEvent(HomeEvent.SelectType(null))
+                                    }
+                                )
+                            }
+                            items(state.types) { type ->
+                                ChipButton(
+                                    selected = type == state.type,
+                                    label = type,
+                                    onClick = {
+                                        onEvent(HomeEvent.SelectType(type))
+                                    }
+                                )
+                            }
                         }
-                        items(state.types) { type ->
-                            ChipButton(
-                                selected = type == state.selectedType,
-                                label = type,
-                                onClick = {
-                                    onEvent(HomeEvent.SelectType(type))
-                                }
-                            )
-                        }
+                        Spacer(Modifier.height(25.dp))
                     }
                 }
-                item {
-                    Spacer(Modifier.height(25.dp))
-                }
-                itemsIndexed(state.products) { index, product ->
+                items(state.products) { product ->
+                    val added = state.carts.any { it.productId == product.id }
                     PrimaryCard(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         title = product.title,
                         type = product.type,
-                        price = product.price,
-                        added = state.carts.any { it?.productId == product.id },
+                        price = "${product.price} ₽",
+                        added = added,
                         onClick = {
-                            onEvent(HomeEvent.SelectProduct(product))
+                            onEvent(HomeEvent.ShowProductModal(product))
+                        },
+                        onButtonClick = {
+                            onEvent(HomeEvent.AddProductToCart(product))
                         }
                     )
                     Spacer(Modifier.height(16.dp))
                 }
             }
         }
-        state.selectedProduct?.let { product ->
-            ProductModal(
-                onDismissRequest = {
-                    onEvent(HomeEvent.SelectProduct(null))
-                },
-                product = product,
-                onClick = {
-                    onEvent(HomeEvent.AddProductToBucket(product))
-                }
-            )
-        }
+    }
+
+    state.product?.let { product ->
+        ProductModal(
+            onDismissRequest = {
+                onEvent(HomeEvent.HideProductModal)
+            },
+            product = product,
+            onClick = {
+                onEvent(HomeEvent.AddProductToCart(product))
+            }
+        )
     }
 }

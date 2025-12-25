@@ -5,5 +5,5 @@ import com.fadymarty.network.domain.model.User
 data class ProfileState(
     val isLoading: Boolean = true,
     val user: User? = null,
-    val isNotificationsEnabled: Boolean = false,
+    val isNotificationsEnabled: Boolean = true,
 )

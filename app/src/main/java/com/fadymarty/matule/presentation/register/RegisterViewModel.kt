@@ -30,35 +30,35 @@ class RegisterViewModel(
     fun onEvent(event: RegisterEvent) {
         when (event) {
             is RegisterEvent.FirstNameChanged -> {
-                _state.update { it.copy(firstName = event.value) }
+                _state.update { it.copy(firstName = event.firstName) }
             }
 
             is RegisterEvent.SecondNameChanged -> {
-                _state.update { it.copy(secondName = event.value) }
+                _state.update { it.copy(secondName = event.secondName) }
             }
 
             is RegisterEvent.LastNameChanged -> {
-                _state.update { it.copy(lastName = event.value) }
+                _state.update { it.copy(lastName = event.lastName) }
             }
 
             is RegisterEvent.DateBirthDayChanged -> {
-                _state.update { it.copy(dateBirthday = event.value) }
+                _state.update { it.copy(dateBirthday = event.dateBirthday) }
             }
 
-            is RegisterEvent.GenderChanged -> {
-                _state.update { it.copy(gender = event.value) }
+            is RegisterEvent.SelectGender -> {
+                _state.update { it.copy(gender = event.gender) }
             }
 
             is RegisterEvent.EmailChanged -> {
-                _state.update { it.copy(email = event.value) }
+                _state.update { it.copy(email = event.email) }
             }
 
             is RegisterEvent.PasswordChanged -> {
-                _state.update { it.copy(password = event.value) }
+                _state.update { it.copy(password = event.password) }
             }
 
-            is RegisterEvent.PasswordConfirmChanged -> {
-                _state.update { it.copy(passwordConfirm = event.value) }
+            is RegisterEvent.ConfirmPasswordChanged -> {
+                _state.update { it.copy(passwordConfirm = event.confirmPassword) }
             }
 
             is RegisterEvent.Submit -> {
@@ -80,7 +80,7 @@ class RegisterViewModel(
             return
         }
         viewModelScope.launch {
-            eventChannel.send(RegisterEvent.NavigateToCreatePassword)
+            eventChannel.send(RegisterEvent.NavigateToPassword)
         }
     }
 
@@ -96,7 +96,7 @@ class RegisterViewModel(
                 isPasswordConfirmValid = isPasswordConfirmValid
             )
         }
-        if (!isPasswordValid || !isPasswordConfirmValid || _state.value.gender == null) {
+        if (!isPasswordValid || !isPasswordConfirmValid) {
             return
         }
         val user = User(
@@ -104,21 +104,21 @@ class RegisterViewModel(
             lastName = _state.value.lastName,
             secondName = _state.value.secondName,
             dateBirthday = _state.value.dateBirthday,
-            gender = _state.value.gender!!,
+            gender = _state.value.gender!!.label,
             email = _state.value.email,
             password = _state.value.password,
             passwordConfirm = _state.value.passwordConfirm
         )
 
-        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
             registerUseCase(user)
                 .onSuccess {
                     eventChannel.send(RegisterEvent.NavigateToCreatePin)
                 }
                 .onFailure {
                     _state.update { it.copy(isLoading = false) }
-                    eventChannel.send(RegisterEvent.ShowSnackBar)
+                    eventChannel.send(RegisterEvent.ShowErrorSnackBar)
                 }
         }
     }

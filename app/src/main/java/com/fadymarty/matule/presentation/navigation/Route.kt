@@ -11,10 +11,13 @@ sealed interface Route {
     data object Login : Route
 
     @Serializable
+    data object RegisterGraph : Route
+
+    @Serializable
     data object Register : Route
 
     @Serializable
-    data object CreatePassword : Route
+    data object Password : Route
 
     @Serializable
     data object CreatePin : Route

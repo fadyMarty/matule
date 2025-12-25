@@ -1,7 +1,10 @@
 package com.fadymarty.matule.presentation.components
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,32 +26,39 @@ fun ProductModal(
         onDismissRequest = onDismissRequest,
         title = product.title,
     ) {
-        Text(
-            text = "Описание",
-            style = MatuleTheme.typography.headlineMedium,
-            color = MatuleTheme.colorScheme.placeholder
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = product.description,
-            style = MatuleTheme.typography.textRegular
-        )
-        Spacer(Modifier.height(49.dp))
-        Text(
-            text = "Примерный расход",
-            style = MatuleTheme.typography.captionSemibold,
-            color = MatuleTheme.colorScheme.placeholder
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = product.approximateCost,
-            style = MatuleTheme.typography.headlineMedium
-        )
-        Spacer(Modifier.height(19.dp))
-        BigButton(
-            label = "Добавить за ${product.price} ₽",
-            onClick = onClick
-        )
-        Spacer(Modifier.height(40.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+        ) {
+            Spacer(Modifier.height(20.dp))
+            Text(
+                text = "Описание",
+                style = MatuleTheme.typography.headlineMedium,
+                color = MatuleTheme.colorScheme.placeholder
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = product.description,
+                style = MatuleTheme.typography.textRegular
+            )
+            Spacer(Modifier.height(49.dp))
+            Text(
+                text = "Примерный расход",
+                style = MatuleTheme.typography.captionSemibold,
+                color = MatuleTheme.colorScheme.placeholder
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = product.approximateCost,
+                style = MatuleTheme.typography.headlineMedium
+            )
+            Spacer(Modifier.height(19.dp))
+            BigButton(
+                label = "Добавить за ${product.price} ₽",
+                onClick = onClick
+            )
+            Spacer(Modifier.height(40.dp))
+        }
     }
 }

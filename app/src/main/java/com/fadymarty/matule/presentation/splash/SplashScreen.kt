@@ -9,43 +9,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.common.theme.RobotoFamily
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SplashRoot(
-    navController: NavHostController,
+    onNavigate: (Route) -> Unit,
     viewModel: SplashViewModel = koinViewModel(),
 ) {
-    val context = LocalContext.current
-
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                SplashEvent.NavigateToEnterPin -> {
-                    navController.navigate(Route.EnterPin) {
-                        popUpTo(Route.Splash) {
-                            inclusive = true
-                        }
-                    }
-                }
-
-                SplashEvent.NavigateToLogin -> {
-                    navController.navigate(Route.Login) {
-                        popUpTo(Route.Splash) {
-                            inclusive = true
-                        }
-                    }
+                is SplashEvent.Navigate -> {
+                    onNavigate(event.route)
                 }
             }
         }
@@ -73,7 +56,6 @@ private fun SplashScreen() {
             fontSize = 40.sp,
             lineHeight = 64.sp,
             letterSpacing = 1.04.sp,
-            textAlign = TextAlign.Center,
             color = MatuleTheme.colorScheme.onAccent
         )
     }

@@ -11,6 +11,6 @@ data class HomeState(
     val carts: List<Cart> = emptyList(),
     val types: List<String> = emptyList(),
     val searchQuery: String = "",
-    val selectedProduct: Product? = null,
-    val selectedType: String? = null,
+    val type: String? = null,
+    val product: Product? = null,
 )

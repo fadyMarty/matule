@@ -1,16 +1,18 @@
 package com.fadymarty.matule.presentation.profile
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -24,10 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingScreen
-import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.controls.Toggle
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
@@ -35,37 +35,33 @@ import com.rajat.pdfviewer.PdfViewerActivity
 import com.rajat.pdfviewer.util.saveTo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun ProfileRoot(
-    rootNavController: NavHostController,
+    onNavigateToLogin: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is ProfileEvent.ShowSnackBar -> {
+                is ProfileEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.error_message)
+                            message = context.getString(R.string.error_message),
+                            duration = SnackbarDuration.Indefinite
                         )
                     }
                     delay(5000)
                     job.cancel()
                 }
 
-                is ProfileEvent.NavigateToLogin -> {
-                    rootNavController.navigate(Route.Login) {
-                        popUpTo(Route.Main) {
-                            inclusive = true
-                        }
-                    }
-                }
+                is ProfileEvent.NavigateToLogin -> onNavigateToLogin()
 
                 else -> Unit
             }
@@ -93,64 +89,65 @@ private fun ProfileScreen(
                 hostState = snackbarHostState
             ) {
                 SnackBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 8.dp),
-                    onClose = {
-                        snackbarHostState.currentSnackbarData?.dismiss()
+                    modifier = Modifier.padding(start = 20.dp, end = 8.dp),
+                    message = it.visuals.message,
+                    onDismiss = {
+                        it.dismiss()
                     },
-                    message = it.visuals.message
                 )
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp)
-                .padding(
-                    top = innerPadding.calculateTopPadding() + 32.dp,
+        if (state.isLoading) {
+            LoadingScreen(
+                modifier = Modifier.padding(
+                    top = innerPadding.calculateTopPadding()
                 )
-        ) {
-            if (state.isLoading) {
-                LoadingScreen()
-            } else {
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .padding(
+                        top = innerPadding.calculateTopPadding()
+                    )
+            ) {
                 state.user?.let { user ->
+                    Spacer(Modifier.height(32.dp))
                     Text(
                         text = user.firstName,
                         style = MatuleTheme.typography.title1ExtraBold
                     )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = user.email,
-                        style = MatuleTheme.typography.headlineRegular,
-                        color = MatuleTheme.colorScheme.placeholder
-                    )
-                    Spacer(Modifier.height(23.dp))
+                    user.email?.let { email ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = email,
+                            style = MatuleTheme.typography.headlineRegular,
+                            color = MatuleTheme.colorScheme.placeholder
+                        )
+                    }
+                    Spacer(Modifier.height(24.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp)
-                            .clickable(
-                                interactionSource = null,
-                                indication = null
-                            ) {
-
-                            },
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Text(
                             text = "📋",
                             fontSize = 32.sp
                         )
-                        Spacer(Modifier.width(20.dp))
                         Text(
-                            text = "Мои заказы"
+                            text = "Мои заказы",
+                            style = MatuleTheme.typography.title3Semibold
                         )
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp),
+                            .padding(vertical = 16.dp)
+                            .padding(end = 15.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -159,7 +156,8 @@ private fun ProfileScreen(
                         )
                         Spacer(Modifier.width(20.dp))
                         Text(
-                            text = "Уведомления"
+                            text = "Уведомления",
+                            style = MatuleTheme.typography.title3Semibold
                         )
                         Spacer(Modifier.weight(1f))
                         Toggle(
@@ -169,63 +167,67 @@ private fun ProfileScreen(
                             }
                         )
                     }
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            modifier = Modifier
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = null
-                                ) {
-                                    context.startActivity(
-                                        PdfViewerActivity.launchPdfFromUrl(
-                                            context = context,
-                                            pdfUrl = "https://www.back4app.com/terms-of-service.pdf",
-                                            pdfTitle = null,
-                                            saveTo = saveTo.DOWNLOADS
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = null,
+                                        indication = null
+                                    ) {
+                                        context.startActivity(
+                                            PdfViewerActivity.launchPdfFromUrl(
+                                                context = context,
+                                                pdfUrl = "https://www.back4app.com/terms-of-service.pdf",
+                                                pdfTitle = null,
+                                                saveTo = saveTo.DOWNLOADS
+                                            )
                                         )
-                                    )
-                                },
-                            text = "Политика конфиденциальности",
-                            style = MatuleTheme.typography.textMedium,
-                            color = MatuleTheme.colorScheme.placeholder
-                        )
-                        Spacer(Modifier.height(24.dp))
-                        Text(
-                            modifier = Modifier
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = null
-                                ) {
-                                    context.startActivity(
-                                        PdfViewerActivity.launchPdfFromUrl(
-                                            context = context,
-                                            pdfUrl = "https://www.back4app.com/terms-of-service.pdf",
-                                            pdfTitle = null,
-                                            saveTo = saveTo.DOWNLOADS
+                                    },
+                                text = "Политика конфиденциальности",
+                                style = MatuleTheme.typography.textMedium,
+                                color = MatuleTheme.colorScheme.placeholder
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = null,
+                                        indication = null
+                                    ) {
+                                        context.startActivity(
+                                            PdfViewerActivity.launchPdfFromUrl(
+                                                context = context,
+                                                pdfUrl = "https://www.back4app.com/terms-of-service.pdf",
+                                                pdfTitle = null,
+                                                saveTo = saveTo.DOWNLOADS
+                                            )
                                         )
-                                    )
-                                },
-                            text = "Пользовательское соглашение",
-                            style = MatuleTheme.typography.textMedium,
-                            color = MatuleTheme.colorScheme.placeholder
-                        )
-                        Spacer(Modifier.height(24.dp))
-                        Text(
-                            modifier = Modifier
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = null
-                                ) {
-                                    onEvent(ProfileEvent.Logout)
-                                },
-                            text = "Выход",
-                            style = MatuleTheme.typography.textMedium,
-                            color = MatuleTheme.colorScheme.error
-                        )
+                                    },
+                                text = "Пользовательское соглашение",
+                                style = MatuleTheme.typography.textMedium,
+                                color = MatuleTheme.colorScheme.placeholder
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = null,
+                                        indication = null
+                                    ) {
+                                        onEvent(ProfileEvent.Logout)
+                                    },
+                                text = "Выход",
+                                style = MatuleTheme.typography.textMedium,
+                                color = MatuleTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }

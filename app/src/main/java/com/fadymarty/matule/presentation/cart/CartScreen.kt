@@ -1,5 +1,7 @@
 package com.fadymarty.matule.presentation.cart
 
+import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
@@ -25,31 +26,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingScreen
-import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
+import com.fadymarty.matule_ui_kit.presentation.components.buttons.BackButton
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
 import com.fadymarty.matule_ui_kit.presentation.components.cards.CartCard
 import com.fadymarty.matule_ui_kit.presentation.components.header.BigHeader
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun CartRoot(
-    rootNavController: NavHostController,
+    onNavigateBack: () -> Unit,
+    onNavigateToMainGraph: () -> Unit,
     viewModel: CartViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
+                is CartEvent.NavigateBack -> onNavigateBack()
                 is CartEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackbarHostState.showSnackbar(
@@ -70,11 +73,7 @@ fun CartRoot(
                     }
                     delay(5000)
                     job.cancel()
-                    rootNavController.navigate(Route.MainGraph) {
-                        popUpTo(Route.Cart) {
-                            inclusive = true
-                        }
-                    }
+                    onNavigateToMainGraph()
                 }
 
                 else -> Unit
@@ -85,7 +84,6 @@ fun CartRoot(
     CartScreen(
         state = state,
         onEvent = viewModel::onEvent,
-        navController = rootNavController,
         snackbarHostState = snackbarHostState
     )
 }
@@ -94,9 +92,14 @@ fun CartRoot(
 private fun CartScreen(
     state: CartState,
     onEvent: (CartEvent) -> Unit,
-    navController: NavHostController,
     snackbarHostState: SnackbarHostState,
 ) {
+    val price = state.carts.sumOf { cart ->
+        state.products.firstOrNull {
+            it.id == cart.productId
+        }?.let { it.price * cart.count } ?: 0
+    }
+
     Scaffold(
         topBar = {
             BigHeader(
@@ -108,12 +111,13 @@ private fun CartScreen(
                         end = 26.dp,
                         bottom = 8.dp
                     ),
-                label = "Корзина",
-                onNavigateBack = {
-                    navController.navigateUp()
-                },
-                onDeleteClick = {
-                    onEvent(CartEvent.ClearBucket)
+                title = "Корзина",
+                navigationIcon = {
+                    BackButton(
+                        onClick = {
+                            onEvent(CartEvent.NavigateBack)
+                        }
+                    )
                 }
             )
         },
@@ -124,8 +128,8 @@ private fun CartScreen(
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
                         message = it.visuals.message,
-                        onClose = {
-                            snackbarHostState.currentSnackbarData?.dismiss()
+                        onDismiss = {
+                            it.dismiss()
                         }
                     )
                 }
@@ -134,68 +138,65 @@ private fun CartScreen(
     ) { innerPadding ->
         if (state.isLoading) {
             LoadingScreen(
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(innerPadding)
             )
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = innerPadding.calculateBottomPadding()
-                    )
+                    .padding(innerPadding)
             ) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     contentPadding = PaddingValues(
-                        start = 20.dp,
-                        top = 24.dp,
-                        end = 20.dp,
-                        bottom = 32.dp
+                        horizontal = 20.dp,
+                        vertical = 32.dp
                     )
                 ) {
                     items(state.carts) { cart ->
-                        val product = state.products.first { it.id == cart.productId }
-
-                        CartCard(
-                            title = product.title,
-                            price = product.price,
-                            onMinusClick = {
-                                onEvent(CartEvent.CountChanged(cart.copy(count = cart.count - 1)))
-                            },
-                            onPlusClick = {
-                                onEvent(CartEvent.CountChanged(cart.copy(count = cart.count + 1)))
-                            },
-                            onDeleteClick = {
-                                onEvent(CartEvent.DeleteCart(cart))
-                            },
-                            count = cart.count
-                        )
-                        Spacer(Modifier.height(32.dp))
+                        val product = state.products.firstOrNull { it.id == cart.productId }
+                        product?.let {
+                            CartCard(
+                                title = product.title,
+                                price = "${product.price} ₽",
+                                onMinusClick = {
+                                    onEvent(
+                                        CartEvent.UpdateCart(
+                                            cart.copy(count = cart.count - 1)
+                                        )
+                                    )
+                                },
+                                onPlusClick = {
+                                    onEvent(
+                                        CartEvent.UpdateCart(
+                                            cart.copy(count = cart.count + 1)
+                                        )
+                                    )
+                                },
+                                onDeleteClick = {
+                                    onEvent(CartEvent.DeleteCart(cart))
+                                },
+                                count = cart.count
+                            )
+                            Spacer(Modifier.height(32.dp))
+                        }
                     }
-
                     item {
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = "Сумма",
                                 style = MatuleTheme.typography.title2SemiBold
                             )
-                            Spacer(Modifier.weight(1f))
                             Text(
-                                text = "${
-                                    state.carts.sumOf { cart ->
-                                        state.products.first {
-                                            it.id == cart.productId
-                                        }.price * cart.count
-                                    }
-                                } ₽",
+                                modifier = Modifier.padding(end = 3.dp),
+                                text = "$price ₽",
                                 style = MatuleTheme.typography.title2SemiBold
                             )
-                            Spacer(Modifier.width(3.dp))
                         }
                     }
                 }
@@ -210,7 +211,7 @@ private fun CartScreen(
                     onClick = {
                         onEvent(CartEvent.CreateOrder)
                     },
-                    active = state.carts.isNotEmpty()
+                    enabled = state.carts.isNotEmpty()
                 )
             }
         }

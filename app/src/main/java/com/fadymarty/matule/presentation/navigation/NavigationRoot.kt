@@ -1,5 +1,8 @@
 package com.fadymarty.matule.presentation.navigation
 
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,6 +16,7 @@ import com.fadymarty.matule.presentation.pin.enter_pin.EnterPinRoot
 import com.fadymarty.matule.presentation.register.PasswordRoot
 import com.fadymarty.matule.presentation.register.RegisterRoot
 import com.fadymarty.matule.presentation.splash.SplashRoot
+import org.koin.compose.viewmodel.sharedKoinViewModel
 
 @Composable
 fun NavigationRoot() {
@@ -22,42 +26,80 @@ fun NavigationRoot() {
         navController = navController,
         startDestination = Route.Splash
     ) {
-        composable<Route.Splash> {
+        composable<Route.Splash>(
+            exitTransition = {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = EaseOut
+                    )
+                )
+            }
+        ) {
             SplashRoot(
-                navController = navController
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Route.Splash) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
-
         composable<Route.Login> {
             LoginRoot(
-                navController = navController
+                onNavigateToRegister = {
+                    navController.navigate(Route.Register)
+                },
+                onNavigateToCreatePin = {
+                    navController.navigate(Route.CreatePin) {
+                        popUpTo(Route.Login) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
-
-        composable<Route.Register> {
-            RegisterRoot(
-                navController = navController
-            )
+        navigation<Route.RegisterGraph>(
+            startDestination = Route.Register
+        ) {
+            composable<Route.Register> {
+                RegisterRoot(
+                    onNavigateToPassword = {
+                        navController.navigate(Route.Password)
+                    },
+                    viewModel = it.sharedKoinViewModel(
+                        navController = navController,
+                        navGraphRoute = Route.RegisterGraph
+                    )
+                )
+            }
+            composable<Route.Password> {
+                PasswordRoot(
+                    onNavigateToCreatePin = {
+                        navController.navigate(Route.CreatePin) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    viewModel = it.sharedKoinViewModel(
+                        navController = navController,
+                        navGraphRoute = Route.RegisterGraph
+                    )
+                )
+            }
         }
-
-        composable<Route.CreatePassword> {
-            PasswordRoot(
-                navController = navController
-            )
-        }
-
         composable<Route.CreatePin> {
             CreatePinRoot(
                 navController = navController
             )
         }
-
         composable<Route.EnterPin> {
             EnterPinRoot(
                 navController = navController
             )
         }
-
         navigation<Route.MainGraph>(
             startDestination = Route.Main
         ) {
@@ -67,10 +109,18 @@ fun NavigationRoot() {
                 )
             }
         }
-
         composable<Route.Cart> {
             CartRoot(
-                rootNavController = navController
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onNavigateToMainGraph = {
+                    navController.navigate(Route.MainGraph) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
+                },
             )
         }
     }

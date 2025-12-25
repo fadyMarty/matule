@@ -1,62 +1,65 @@
 package com.fadymarty.matule.presentation.register
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingScreen
-import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.common.theme.MatuleTheme
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
 import com.fadymarty.matule_ui_kit.presentation.components.input.PasswordInput
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
-import org.koin.compose.viewmodel.koinActivityViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun PasswordRoot(
-    navController: NavHostController,
-    viewModel: RegisterViewModel = koinActivityViewModel(),
+    onNavigateToCreatePin: () -> Unit,
+    viewModel: RegisterViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is RegisterEvent.ShowSnackBar -> {
-                    snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.error_message)
-                    )
+                is RegisterEvent.ShowErrorSnackBar -> {
+                    val job = launch {
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.error_message),
+                            duration = SnackbarDuration.Indefinite
+                        )
+                    }
+                    delay(5000)
+                    job.cancel()
                 }
 
-                is RegisterEvent.NavigateToCreatePin -> {
-                    navController.navigate(Route.CreatePin) {
-                        popUpTo(Route.CreatePassword) {
-                            inclusive = true
-                        }
-                    }
-                }
+                is RegisterEvent.NavigateToCreatePin -> onNavigateToCreatePin()
 
                 else -> Unit
             }
@@ -64,9 +67,9 @@ fun PasswordRoot(
     }
 
     PasswordScreen(
-        snackbarHostState = snackbarHostState,
         state = state,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -76,23 +79,30 @@ private fun PasswordScreen(
     onEvent: (RegisterEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
 ) {
+    var isPasswordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var isConfirmPasswordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState) {
                 SnackBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 12.dp),
-                    onClose = {
-                        snackbarHostState.currentSnackbarData?.dismiss()
+                    modifier = Modifier.padding(start = 20.dp, end = 8.dp),
+                    message = it.visuals.message,
+                    onDismiss = {
+                        it.dismiss()
                     },
-                    message = it.visuals.message
                 )
             }
         }
     ) { innerPadding ->
         if (state.isLoading) {
-            LoadingScreen()
+            LoadingScreen(
+                modifier = Modifier.padding(innerPadding)
+            )
         } else {
             Column(
                 modifier = Modifier
@@ -126,17 +136,25 @@ private fun PasswordScreen(
                         onEvent(RegisterEvent.PasswordChanged(it))
                     },
                     label = "Новый Пароль",
+                    isVisible = isPasswordVisible,
+                    onTrailingIconClick = {
+                        isPasswordVisible = !isPasswordVisible
+                    },
                     error = if (!state.isPasswordValid) {
-                        "Пароль должен содержать заглавные и строчные буквы, цифры, пробелы и специальные символы и быть не менее 8 символов"
+                        "Введите надежный пароль"
                     } else null
                 )
                 Spacer(Modifier.height(12.dp))
                 PasswordInput(
                     value = state.passwordConfirm,
                     onValueChange = {
-                        onEvent(RegisterEvent.PasswordConfirmChanged(it))
+                        onEvent(RegisterEvent.ConfirmPasswordChanged(it))
                     },
                     label = "Повторите пароль",
+                    isVisible = isConfirmPasswordVisible,
+                    onTrailingIconClick = {
+                        isConfirmPasswordVisible = !isConfirmPasswordVisible
+                    },
                     error = if (!state.isPasswordValid) {
                         "Пароли не совпадают"
                     } else null
@@ -147,7 +165,7 @@ private fun PasswordScreen(
                     onClick = {
                         onEvent(RegisterEvent.Register)
                     },
-                    active = state.password.isNotBlank() && state.passwordConfirm.isNotBlank()
+                    enabled = state.password.isNotBlank() && state.passwordConfirm.isNotBlank()
                 )
             }
         }

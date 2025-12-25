@@ -68,7 +68,7 @@ class ProfileViewModel(
                     }
                 }
                 .onFailure {
-                    eventChannel.send(ProfileEvent.ShowSnackBar)
+                    eventChannel.send(ProfileEvent.ShowErrorSnackBar)
                 }
         }
     }

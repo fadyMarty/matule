@@ -1,8 +1,8 @@
 package com.fadymarty.matule.presentation.profile
 
-sealed class ProfileEvent {
-    object ToggleNotificationsEnabled : ProfileEvent()
-    object Logout : ProfileEvent()
-    object NavigateToLogin : ProfileEvent()
-    object ShowSnackBar : ProfileEvent()
+sealed interface ProfileEvent {
+    data object ToggleNotificationsEnabled : ProfileEvent
+    data object Logout : ProfileEvent
+    data object NavigateToLogin : ProfileEvent
+    data object ShowErrorSnackBar : ProfileEvent
 }

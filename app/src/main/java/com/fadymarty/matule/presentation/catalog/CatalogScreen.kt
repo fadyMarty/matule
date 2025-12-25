@@ -1,5 +1,6 @@
 package com.fadymarty.matule.presentation.catalog
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -31,12 +31,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import com.fadymarty.matule.R
 import com.fadymarty.matule.presentation.components.LoadingScreen
 import com.fadymarty.matule.presentation.components.ProductModal
-import com.fadymarty.matule.presentation.navigation.Route
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.CartButton
 import com.fadymarty.matule_ui_kit.presentation.components.buttons.ChipButton
 import com.fadymarty.matule_ui_kit.presentation.components.cards.PrimaryCard
@@ -44,21 +41,24 @@ import com.fadymarty.matule_ui_kit.presentation.components.input.SearchInput
 import com.fadymarty.matule_ui_kit.presentation.components.snack_bar.SnackBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun CatalogRoot(
-    rootNavController: NavHostController,
-    navController: NavHostController,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToCart: () -> Unit,
     viewModel: CatalogViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(context) {
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
+                is CatalogEvent.NavigateToProfile -> onNavigateToProfile()
+                is CatalogEvent.NavigateToCart -> onNavigateToCart()
                 is CatalogEvent.ShowErrorSnackBar -> {
                     val job = launch {
                         snackbarHostState.showSnackbar(
@@ -78,9 +78,7 @@ fun CatalogRoot(
     CatalogScreen(
         snackbarHostState = snackbarHostState,
         state = state,
-        onEvent = viewModel::onEvent,
-        rootNavController = rootNavController,
-        navController = navController
+        onEvent = viewModel::onEvent
     )
 }
 
@@ -89,8 +87,6 @@ private fun CatalogScreen(
     state: CatalogState,
     onEvent: (CatalogEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
-    rootNavController: NavHostController,
-    navController: NavHostController,
 ) {
     Scaffold(
         topBar = {
@@ -100,7 +96,8 @@ private fun CatalogScreen(
                     .padding(top = 28.dp)
                     .padding(horizontal = 20.dp)
                     .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(38.dp)
             ) {
                 SearchInput(
                     modifier = Modifier.weight(1f),
@@ -109,26 +106,20 @@ private fun CatalogScreen(
                         onEvent(CatalogEvent.SearchQueryChanged(it))
                     },
                     hint = "Искать описания",
-                    onClear = {
-                        onEvent(CatalogEvent.SearchQueryChanged(""))
+                    onClearClick = {
+                        onEvent(CatalogEvent.ClearSearchQuery)
                     }
                 )
-                Spacer(Modifier.width(38.dp))
                 Image(
                     modifier = Modifier
                         .size(32.dp)
                         .clickable(
                             interactionSource = null,
-                            indication = null
-                        ) {
-                            navController.navigate(Route.Profile) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
+                            indication = null,
+                            onClick = {
+                                onEvent(CatalogEvent.NavigateToProfile)
                             }
-                        },
+                        ),
                     painter = painterResource(R.drawable.img_user_icon),
                     contentDescription = null
                 )
@@ -141,8 +132,8 @@ private fun CatalogScreen(
                     SnackBar(
                         modifier = Modifier.padding(start = 20.dp, end = 8.dp),
                         message = it.visuals.message,
-                        onClose = {
-                            snackbarHostState.currentSnackbarData?.dismiss()
+                        onDismiss = {
+                            it.dismiss()
                         }
                     )
                 }
@@ -153,7 +144,7 @@ private fun CatalogScreen(
             LoadingScreen(
                 modifier = Modifier
                     .padding(
-                        top = innerPadding.calculateTopPadding() + 24.dp
+                        top = innerPadding.calculateTopPadding()
                     )
             )
         } else {
@@ -164,84 +155,89 @@ private fun CatalogScreen(
                         top = innerPadding.calculateTopPadding() + 24.dp
                     )
             ) {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        ChipButton(
-                            selected = state.selectedType == null,
-                            label = "Все",
-                            onClick = {
-                                onEvent(CatalogEvent.SelectType(null))
-                            }
-                        )
+                if (state.products.isNotEmpty()) {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            ChipButton(
+                                selected = state.type == null,
+                                label = "Все",
+                                onClick = {
+                                    onEvent(CatalogEvent.SelectType(null))
+                                }
+                            )
+                        }
+                        items(state.types) { type ->
+                            ChipButton(
+                                selected = type == state.type,
+                                label = type,
+                                onClick = {
+                                    onEvent(CatalogEvent.SelectType(type))
+                                }
+                            )
+                        }
                     }
-                    items(state.types) { type ->
-                        ChipButton(
-                            selected = type == state.selectedType,
-                            label = type,
-                            onClick = {
-                                onEvent(CatalogEvent.SelectType(type))
-                            }
-                        )
-                    }
+                    Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     contentPadding = PaddingValues(
+                        start = 20.dp,
                         top = 12.dp,
-                        bottom = if (state.carts.isNotEmpty()) 120.dp else 0.dp
+                        end = 20.dp,
+                        bottom = 8.dp
                     )
                 ) {
                     items(state.products) { product ->
                         PrimaryCard(
-                            modifier = Modifier.padding(horizontal = 20.dp),
                             title = product.title,
                             type = product.type,
-                            price = product.price,
-                            added = state.carts.any { it?.productId == product.id },
+                            price = "${product.price} ₽",
+                            added = state.carts.any { it.productId == product.id },
                             onClick = {
-                                onEvent(CatalogEvent.SelectProduct(product))
+                                onEvent(CatalogEvent.ShowProductModal(product))
+                            },
+                            onButtonClick = {
+                                onEvent(CatalogEvent.AddProductToCart(product))
                             }
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
                     }
                 }
                 if (state.carts.isNotEmpty()) {
                     CartButton(
                         modifier = Modifier
-                            .fillMaxWidth()
                             .padding(
                                 horizontal = 20.dp,
                                 vertical = 32.dp
                             ),
                         onClick = {
-                            rootNavController.navigate(Route.Cart)
+                            onEvent(CatalogEvent.NavigateToCart)
                         },
                         price = state.carts.sumOf { cart ->
                             state.products.first {
-                                it.id == cart?.productId
-                            }.price
+                                it.id == cart.productId
+                            }.price * cart.count
                         }
                     )
                 }
             }
         }
-        state.selectedProduct?.let { product ->
-            ProductModal(
-                onDismissRequest = {
-                    onEvent(CatalogEvent.SelectProduct(null))
-                },
-                product = product,
-                onClick = {
-                    onEvent(CatalogEvent.AddProductToBucket(product))
-                }
-            )
-        }
+    }
+
+    state.product?.let { product ->
+        ProductModal(
+            onDismissRequest = {
+                onEvent(CatalogEvent.HideProductModal)
+            },
+            product = product,
+            onClick = {
+                onEvent(CatalogEvent.AddProductToCart(product))
+            }
+        )
     }
 }

@@ -35,10 +35,6 @@ class CartViewModel(
     val events = eventChannel.receiveAsFlow()
 
     init {
-        initialize()
-    }
-
-    private fun initialize() {
         _state.update { it.copy(isLoading = true) }
 
         observeCartsUseCase().onEach { carts ->
@@ -54,15 +50,17 @@ class CartViewModel(
                     eventChannel.send(CartEvent.ShowErrorSnackBar)
                 }
             products.await()
-                .onSuccess { catalog ->
-                    _state.update { it.copy(products = catalog) }
+                .onSuccess { products ->
+                    _state.update {
+                        it.copy(products = products)
+                    }
                 }
                 .onFailure {
                     eventChannel.send(CartEvent.ShowErrorSnackBar)
                 }
-
-            _state.update { it.copy(isLoading = false) }
         }
+
+        _state.update { it.copy(isLoading = false) }
     }
 
     fun onEvent(event: CartEvent) {
@@ -71,16 +69,22 @@ class CartViewModel(
                 deleteCart(event.cart)
             }
 
-            is CartEvent.CountChanged -> {
-                onCountChanged(event.cart)
+            is CartEvent.UpdateCart -> {
+                updateCart(event.cart)
             }
 
-            is CartEvent.ClearBucket -> {
-                clearBucket()
+            is CartEvent.ClearCart -> {
+                clearCart()
             }
 
             is CartEvent.CreateOrder -> {
                 createOrder()
+            }
+
+            CartEvent.NavigateBack -> {
+                viewModelScope.launch {
+                    eventChannel.send(CartEvent.NavigateBack)
+                }
             }
 
             else -> Unit
@@ -98,24 +102,20 @@ class CartViewModel(
                                 eventChannel.send(CartEvent.ShowErrorSnackBar)
                             }
                     }
-                    _state.update { it.copy(isLoading = false) }
                     eventChannel.send(CartEvent.ShowSuccessSnackBar)
                 }
                 .onFailure {
-                    _state.update { it.copy(isLoading = false) }
                     eventChannel.send(CartEvent.ShowErrorSnackBar)
                 }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
-    private fun clearBucket() {
+    private fun clearCart() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             _state.value.carts.forEach { cart ->
                 deleteCartUseCase(cart.id!!)
-                    .onSuccess {
-                        _state.update { it.copy(carts = emptyList()) }
-                    }
                     .onFailure {
                         eventChannel.send(CartEvent.ShowErrorSnackBar)
                     }
@@ -124,20 +124,14 @@ class CartViewModel(
         }
     }
 
-    private fun onCountChanged(cart: Cart) {
+    private fun updateCart(cart: Cart) {
         viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    carts = it.carts.map { item ->
-                        if (item.id == cart.id) cart else item
-                    }
-                )
-            }
+            _state.update { it.copy(isLoading = true) }
             updateCartUseCase(cart)
                 .onFailure {
-                    _state.update { it.copy(isLoading = false) }
                     eventChannel.send(CartEvent.ShowErrorSnackBar)
                 }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
@@ -145,13 +139,10 @@ class CartViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             deleteCartUseCase(cart.id!!)
-                .onSuccess {
-                    _state.update { it.copy(isLoading = false) }
-                }
                 .onFailure {
-                    _state.update { it.copy(isLoading = false) }
                     eventChannel.send(CartEvent.ShowErrorSnackBar)
                 }
+            _state.update { it.copy(isLoading = false) }
         }
     }
 }

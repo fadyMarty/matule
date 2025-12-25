@@ -1,13 +1,13 @@
 package com.fadymarty.matule.presentation.main
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -37,37 +37,32 @@ fun MainScreen(
             TabBar(
                 items = listOf(
                     TabBarItem(
-                        icon = ImageVector.vectorResource(R.drawable.ic_home),
+                        icon = R.drawable.ic_home,
                         label = "Главная",
                         route = Route.Home
                     ),
                     TabBarItem(
-                        icon = ImageVector.vectorResource(R.drawable.ic_catalog),
+                        icon = R.drawable.ic_catalog,
                         label = "Каталог",
                         route = Route.Catalog
                     ),
                     TabBarItem(
-                        icon = ImageVector.vectorResource(R.drawable.ic_projects),
+                        icon = R.drawable.ic_projects,
                         label = "Проекты",
                         iconSize = 24.dp,
-                        spacing = 3.dp,
+                        iconPadding = PaddingValues(top = 5.dp, bottom = 3.dp),
                         route = Route.Projects
                     ),
                     TabBarItem(
-                        icon = ImageVector.vectorResource(R.drawable.ic_profile),
+                        icon = R.drawable.ic_profile,
                         label = "Профиль",
                         route = Route.Profile
                     )
                 ),
-                selectedRoute = currentRoute,
+                currentRoute = currentRoute,
                 onItemClick = { item ->
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        restoreState = true
-                        launchSingleTop = true
-                    }
+                    navigateToTap(navController, item.route)
+
                 }
             )
         }
@@ -82,14 +77,16 @@ fun MainScreen(
             composable<Route.Home> {
                 HomeRoot()
             }
-
             composable<Route.Catalog> {
                 CatalogRoot(
-                    rootNavController = rootNavController,
-                    navController = navController
+                    onNavigateToProfile = {
+                        navigateToTap(navController, Route.Profile)
+                    },
+                    onNavigateToCart = {
+                        rootNavController.navigate(Route.Cart)
+                    }
                 )
             }
-
             navigation<Route.ProjectsGraph>(
                 startDestination = Route.Projects
             ) {
@@ -100,12 +97,27 @@ fun MainScreen(
                     CreateProjectRoot()
                 }
             }
-
             composable<Route.Profile> {
                 ProfileRoot(
-                    rootNavController = rootNavController
+                    onNavigateToLogin = {
+                        rootNavController.navigate(Route.Login) {
+                            popUpTo(Route.Main) {
+                                inclusive = true
+                            }
+                        }
+                    }
                 )
             }
         }
+    }
+}
+
+private fun navigateToTap(navController: NavController, route: Any) {
+    navController.navigate(route) {
+        popUpTo(navController.graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

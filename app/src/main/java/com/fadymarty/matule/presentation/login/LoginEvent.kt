@@ -1,9 +1,10 @@
 package com.fadymarty.matule.presentation.login
 
 sealed interface LoginEvent {
-    data class EmailChanged(val value: String) : LoginEvent
-    data class PasswordChanged(val value: String) : LoginEvent
-    object Login : LoginEvent
-    object NavigateToCreatePin : LoginEvent
-    object ShowErrorSnackBar : LoginEvent
+    data class EmailChanged(val email: String) : LoginEvent
+    data class PasswordChanged(val password: String) : LoginEvent
+    data object Login : LoginEvent
+    data object NavigateToRegister : LoginEvent
+    data object NavigateToCreatePin : LoginEvent
+    data object ShowErrorSnackBar : LoginEvent
 }

@@ -28,7 +28,7 @@ import com.fadymarty.matule_ui_kit.presentation.components.buttons.BigButton
 import com.fadymarty.matule_ui_kit.presentation.components.header.SmallHeader
 import com.fadymarty.matule_ui_kit.presentation.components.input.Input
 import com.fadymarty.matule_ui_kit.presentation.components.select.Select
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun CreateProjectRoot(
@@ -51,7 +51,7 @@ private fun CreateProjectScreen(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
                     .statusBarsPadding(),
-                label = "Создать проект"
+                title = "Создать проект"
             )
         }
     ) { innerPadding ->
